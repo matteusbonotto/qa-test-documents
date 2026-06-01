@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -48,7 +48,7 @@
       <main class="conteudo">
         <header class="topo">
           <button type="button" class="botao-icone" @click="menuAberto = !menuAberto" title="Abrir menu">
-            <i data-lucide="menu"></i>
+            <span class="material-icons" aria-hidden="true">menu</span>
           </button>
           <div>
             <p class="rotulo">Central pessoal de documentacao</p>
@@ -56,11 +56,11 @@
           </div>
           <div class="topo__acoes">
             <button type="button" class="botao-secundario" @click="alternarTema()" title="Alternar tema">
-              <i data-lucide="moon-star"></i>
+              <span class="material-icons" aria-hidden="true">dark_mode</span>
               <span>Tema</span>
             </button>
             <button type="button" class="botao-primario" @click="salvarRascunho()" title="Salvar rascunho">
-              <i data-lucide="save"></i>
+              <span class="material-icons" aria-hidden="true">save</span>
               <span>Salvar</span>
             </button>
           </div>
@@ -172,15 +172,43 @@
               </template>
             </div>
 
-            <div x-show="abaDocumentacao === 'identificacao'" x-transition class="secao-formulario">
-              <div class="grade-formulario">
-                <label>Projeto<input x-model="documentacao.projeto" type="text" placeholder="Portal interno" /></label>
-                <label>Modulo<input x-model="documentacao.modulo" type="text" placeholder="Autenticacao" /></label>
-                <label>Funcionalidade<input x-model="documentacao.funcionalidade" type="text" placeholder="Login" /></label>
-                <label>Historia de usuario<input x-model="documentacao.historiaUsuario" type="text" placeholder="US-123" /></label>
-              </div>
+            <div x-show="abaDocumentacao === 'identificacao'" x-transition class="secao-formulario lista-acordeons-formulario">
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Contexto do plano</strong><small>Projeto, modulo, funcionalidade e historia</small></span><span class="badge">Etapa 1</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="grade-formulario">
+                    <label>Projeto<input x-model="documentacao.projeto" type="text" placeholder="Portal interno" /></label>
+                    <label>Modulo<input x-model="documentacao.modulo" type="text" placeholder="Autenticacao" /></label>
+                    <label>Funcionalidade<input x-model="documentacao.funcionalidade" type="text" placeholder="Login" /></label>
+                    <label>Historia de usuario<input x-model="documentacao.historiaUsuario" type="text" placeholder="US-123" /></label>
+                  </div>
+                </div>
+              </details>
 
-              <div class="painel-opcoes">
+              <details class="acordeon-formulario">
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Pessoas envolvidas</strong><small>Cliente/projeto, QA criador e desenvolvedor</small></span><span class="badge">Perfis</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="grade-formulario grade-formulario--perfis">
+                    <label>Cliente / projeto<select x-model="documentacao.clienteProjetoId" @change="selecionarClienteProjetoFormulario('documentacao', documentacao.clienteProjetoId)"><option value="">Sem cliente/projeto selecionado</option><template x-for="clienteProjeto in configuracoes.clientesProjetos" :key="clienteProjeto.identificador"><option :value="clienteProjeto.identificador" x-text="clienteProjeto.nome"></option></template></select></label>
+                    <label>QA criador<select x-model="documentacao.qaResponsavelId" @change="selecionarQaFormulario('documentacao', documentacao.qaResponsavelId)"><option value="">Sem QA selecionado</option><template x-for="qa in configuracoes.qas" :key="qa.identificador"><option :value="qa.identificador" x-text="qa.nome"></option></template></select></label>
+                    <label>Desenvolvedor<select x-model="documentacao.desenvolvedorId" @change="selecionarDesenvolvedorFormulario('documentacao', documentacao.desenvolvedorId)"><option value="">Sem dev selecionado</option><template x-for="desenvolvedor in configuracoes.desenvolvedores" :key="desenvolvedor.identificador"><option :value="desenvolvedor.identificador" x-text="desenvolvedor.nome"></option></template></select></label>
+                    <div class="campo-amplo lista-perfis-selecionados">
+                      <template x-for="perfil in [obterCadastroSelecionado('documentacao', 'clienteProjeto'), obterCadastroSelecionado('documentacao', 'qa'), obterCadastroSelecionado('documentacao', 'desenvolvedor')].filter(Boolean)" :key="perfil.identificador">
+                        <article class="cartao-perfil-mini">
+                          <img x-show="perfil.imagemPerfil" :src="perfil.imagemPerfil" alt="" />
+                          <span x-show="!perfil.imagemPerfil" x-text="obterIniciaisCadastro(perfil)"></span>
+                          <div><strong x-text="perfil.nome"></strong><small x-text="perfil.ocupacao"></small></div>
+                        </article>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Canal e ambiente</strong><small>Escolhas rapidas para reduzir preenchimento manual</small></span><span class="badge">Opcoes</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="painel-opcoes">
                 <div class="grupo-opcoes">
                   <span x-text="obterGrupoOpcoes('canal').nome"></span>
                   <div class="lista-toggles">
@@ -197,7 +225,7 @@
                     <template x-for="valor in obterValoresPersonalizados(documentacao, 'canal', 'canal')" :key="valor">
                       <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(documentacao, 'canal', 'canal', valor)">
                         <span x-text="valor"></span>
-                        <i data-lucide="x"></i>
+                        <span class="material-icons" aria-hidden="true">close</span>
                       </button>
                     </template>
                   </div>
@@ -219,16 +247,21 @@
                     <template x-for="valor in obterValoresPersonalizados(documentacao, 'ambiente', 'ambiente')" :key="valor">
                       <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(documentacao, 'ambiente', 'ambiente', valor)">
                         <span x-text="valor"></span>
-                        <i data-lucide="x"></i>
+                        <span class="material-icons" aria-hidden="true">close</span>
                       </button>
                     </template>
                   </div>
                 </div>
-              </div>
+                  </div>
+                </div>
+              </details>
             </div>
 
-            <div x-show="abaDocumentacao === 'planejamento'" x-transition class="secao-formulario">
-              <div class="painel-opcoes">
+            <div x-show="abaDocumentacao === 'planejamento'" x-transition class="secao-formulario lista-acordeons-formulario">
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Classificacao do teste</strong><small>Prioridade e tipos de teste</small></span><span class="badge">Etapa 2</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="painel-opcoes">
                 <div class="grupo-opcoes">
                   <span x-text="obterGrupoOpcoes('prioridade').nome"></span>
                   <div class="controle-segmentado">
@@ -245,7 +278,7 @@
                     <template x-for="valor in obterValoresPersonalizados(documentacao, 'prioridade', 'prioridade')" :key="valor">
                       <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(documentacao, 'prioridade', 'prioridade', valor)">
                         <span x-text="valor"></span>
-                        <i data-lucide="x"></i>
+                        <span class="material-icons" aria-hidden="true">close</span>
                       </button>
                     </template>
                   </div>
@@ -270,51 +303,66 @@
                     <template x-for="valor in obterValoresPersonalizados(documentacao, 'tiposTeste', 'tiposTeste')" :key="valor">
                       <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(documentacao, 'tiposTeste', 'tiposTeste', valor)">
                         <span x-text="valor"></span>
-                        <i data-lucide="x"></i>
+                        <span class="material-icons" aria-hidden="true">close</span>
                       </button>
                     </template>
                   </div>
                 </div>
-              </div>
+                  </div>
+                </div>
+              </details>
 
-              <div class="grade-formulario">
-                <label class="campo-amplo">Cenario<textarea x-model="documentacao.cenario" rows="4" placeholder="Descreva a situacao de negocio que sera validada"></textarea></label>
-                <label>Pre-condicao<textarea x-model="documentacao.preCondicao" rows="4"></textarea></label>
-                <label>Massa de dados<textarea x-model="documentacao.massaDados" rows="4"></textarea></label>
-              </div>
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Cenario e preparacao</strong><small>Objetivo, pre-condicoes e massa de dados</small></span><span class="badge">Planejamento</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="grade-formulario">
+                    <label class="campo-amplo">Cenario<textarea x-model="documentacao.cenario" rows="4" placeholder="Descreva a situacao de negocio que sera validada"></textarea></label>
+                    <label>Pre-condicao<textarea x-model="documentacao.preCondicao" rows="4"></textarea></label>
+                    <label>Massa de dados<textarea x-model="documentacao.massaDados" rows="4"></textarea></label>
+                  </div>
+                </div>
+              </details>
             </div>
 
-            <div x-show="abaDocumentacao === 'procedimentos'" x-transition class="secao-formulario">
-              <div class="cabecalho-bloco">
-                <h3>Passos de Teste</h3>
-                <button type="button" class="botao-secundario" @click="adicionarPassoDocumentacao()">Adicionar passo</button>
-              </div>
-              <div class="tabela-responsiva">
-                <table>
+            <div x-show="abaDocumentacao === 'procedimentos'" x-transition class="secao-formulario lista-acordeons-formulario">
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Passos de teste</strong><small>Procedimentos com arrastar e soltar</small></span><span class="badge" x-text="`${documentacao.passos.length} passo(s)`"></span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="cabecalho-bloco">
+                    <h3>Passos de Teste</h3>
+                    <button type="button" class="botao-secundario" @click="adicionarPassoDocumentacao()">Adicionar passo</button>
+                  </div>
+                  <div class="tabela-responsiva">
+                    <table>
                   <thead><tr><th>Passo</th><th>Acao executada</th><th>Esperado</th><th>Obtido</th><th>Status</th><th></th></tr></thead>
                   <tbody>
                     <template x-for="(passo, indice) in documentacao.passos" :key="passo.identificador">
                       <tr draggable="true" @dragstart="iniciarArrastePasso(indice)" @dragover.prevent @drop.prevent="soltarPasso(indice)" :class="{ arrastando: passoArrastadoIndice === indice }">
-                        <td><button type="button" class="botao-icone alca-arraste" title="Arrastar passo"><i data-lucide="grip-vertical"></i></button><span x-text="indice + 1"></span></td>
+                        <td><button type="button" class="botao-icone alca-arraste" title="Arrastar passo"><span class="material-icons" aria-hidden="true">drag_indicator</span></button><span x-text="indice + 1"></span></td>
                         <td><textarea x-model="passo.acaoExecutada" rows="2"></textarea></td>
                         <td><textarea x-model="passo.resultadoEsperado" rows="2"></textarea></td>
                         <td><textarea x-model="passo.resultadoObtido" rows="2"></textarea></td>
                         <td><select x-model="passo.status"><template x-for="statusTeste in obterRotulosGrupo('statusTeste')" :key="statusTeste"><option :value="statusTeste" x-text="statusTeste"></option></template></select></td>
-                        <td><button type="button" class="botao-icone" @click="removerPassoDocumentacao(indice)" title="Remover passo"><i data-lucide="trash-2"></i></button></td>
+                        <td><button type="button" class="botao-icone" @click="removerPassoDocumentacao(indice)" title="Remover passo"><span class="material-icons" aria-hidden="true">delete</span></button></td>
                       </tr>
                     </template>
                   </tbody>
-                </table>
-              </div>
+                    </table>
+                  </div>
+                </div>
+              </details>
             </div>
 
-            <div x-show="abaDocumentacao === 'resultado'" x-transition class="secao-formulario">
-              <div class="painel-opcoes">
+            <div x-show="abaDocumentacao === 'resultado'" x-transition class="secao-formulario lista-acordeons-formulario">
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Status final</strong><small>Sinalizacao visual do resultado do plano</small></span><span class="badge" x-text="documentacao.status"></span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="painel-opcoes">
                 <div class="grupo-opcoes">
                   <span x-text="obterGrupoOpcoes('statusTeste').nome"></span>
                   <div class="controle-segmentado controle-segmentado--status">
                     <template x-for="statusTeste in obterRotulosGrupo('statusTeste')" :key="statusTeste">
-                      <button type="button" :title="statusTeste" :class="{ ativo: valorSelecionado(documentacao, 'status', statusTeste) }" @click="selecionarOpcaoDocumentacao('statusTeste', 'status', statusTeste)" x-text="statusTeste"></button>
+                      <button type="button" :title="statusTeste" :class="[valorSelecionado(documentacao, 'status', statusTeste) ? 'ativo' : '', classeOpcao(statusTeste)]" @click="selecionarOpcaoDocumentacao('statusTeste', 'status', statusTeste)"><i x-show="obterIconeOpcao('statusTeste', statusTeste)" :data-lucide="obterIconeOpcao('statusTeste', statusTeste)"></i><span x-text="statusTeste"></span></button>
                     </template>
                     <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('documentacao', 'statusTeste') }" @click="alternarOutro('documentacao', 'statusTeste')">Outro</button>
                   </div>
@@ -326,36 +374,95 @@
                     <template x-for="valor in obterValoresPersonalizados(documentacao, 'statusTeste', 'status')" :key="valor">
                       <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(documentacao, 'statusTeste', 'status', valor)">
                         <span x-text="valor"></span>
-                        <i data-lucide="x"></i>
+                        <span class="material-icons" aria-hidden="true">close</span>
                       </button>
                     </template>
                   </div>
                 </div>
-              </div>
-              <div class="grade-formulario">
+                  </div>
+                </div>
+              </details>
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Resultados e evidencias</strong><small>Esperado, obtido, anexos e observacoes</small></span><span class="badge">Evidencias</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="grade-formulario">
                 <label>Resultado esperado<textarea x-model="documentacao.resultadoEsperado" rows="4"></textarea></label>
                 <label>Resultado obtido<textarea x-model="documentacao.resultadoObtido" rows="4"></textarea></label>
-                <label class="campo-amplo">Evidencias<textarea x-model="documentacao.evidencias" rows="4" placeholder="Links, prints, arquivos ou observacoes"></textarea></label>
+                <div class="campo-amplo bloco-evidencias">
+                  <label>Evidencias<textarea x-model="documentacao.evidencias" rows="3" placeholder="Links, prints, arquivos ou observacoes"></textarea></label>
+                  <label class="dropzone-evidencia" @dragover.prevent @drop.prevent="soltarEvidencias('documentacao', $event)">
+                    <span class="material-icons" aria-hidden="true">attach_file</span>
+                    <span>Arraste arquivos ou clique para selecionar evidencias</span>
+                    <small>txt, csv, pdf, imagens, gif, audio, video e outros arquivos</small>
+                    <input type="file" multiple @change="selecionarEvidencias('documentacao', $event)" />
+                  </label>
+                  <div class="grade-evidencias" x-show="evidenciaArquivos.documentacao.length > 0">
+                    <template x-for="evidencia in evidenciaArquivos.documentacao" :key="evidencia.identificador">
+                      <article class="cartao-evidencia">
+                        <strong x-text="evidencia.nome"></strong>
+                        <small x-text="`${evidencia.tipo} - ${formatarTamanhoArquivo(evidencia.tamanho)}`"></small>
+                        <video x-show="evidencia.video" controls :src="evidencia.url"></video>
+                        <img x-show="evidencia.imagem && !evidencia.video" :src="evidencia.url" alt="" />
+                        <audio x-show="evidencia.audio" controls :src="evidencia.url"></audio>
+                        <div class="linha-acoes">
+                          <a class="botao-secundario" :href="evidencia.url" :download="evidencia.nome">Baixar</a>
+                          <button type="button" class="botao-perigo" @click="removerEvidencia('documentacao', evidencia.identificador)">Remover</button>
+                        </div>
+                        <small x-show="evidencia.partes.length > 0" x-text="`Arquivo grande dividido em ${evidencia.partes.length} partes ao exportar.`"></small>
+                      </article>
+                    </template>
+                  </div>
+                </div>
                 <label class="campo-amplo">Observacoes<textarea x-model="documentacao.observacoes" rows="4"></textarea></label>
-              </div>
+                  </div>
+                </div>
+              </details>
+              <details class="acordeon-formulario" x-show="obterCamposFormulario('documentacao').length > 0">
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Campos personalizados</strong><small>Campos criados nas configuracoes</small></span><span class="badge" x-text="obterCamposFormulario('documentacao').length"></span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="campos-personalizados">
+                    <h3>Campos personalizados</h3>
+                    <div class="grade-formulario">
+                  <template x-for="campo in obterCamposFormulario('documentacao')" :key="campo.identificador">
+                    <div class="campo-amplo campo-personalizado">
+                      <label x-show="campo.tipo !== 'botoes'"><span x-text="campo.nome"></span><input x-show="campo.tipo === 'texto'" x-model="camposPersonalizadosValores.documentacao[campo.chave]" type="text" /><textarea x-show="campo.tipo === 'area'" x-model="camposPersonalizadosValores.documentacao[campo.chave]" rows="3"></textarea></label>
+                      <div x-show="campo.tipo === 'botoes'" class="grupo-opcoes">
+                        <span x-text="campo.nome"></span>
+                        <div class="lista-toggles">
+                          <template x-for="opcao in obterOpcoesGrupo(campo.grupoCampo)" :key="opcao.identificador">
+                            <button type="button" class="botao-toggle" :class="[campoPersonalizadoSelecionado('documentacao', campo, opcao.rotulo) ? 'ativo' : '', classeOpcao(opcao.rotulo)]" @click="selecionarCampoPersonalizado('documentacao', campo, opcao.rotulo)">
+                              <img x-show="opcao.imagem" :src="opcao.imagem" alt="" class="icone-opcao-imagem" />
+                              <span x-show="!opcao.imagem && (opcao.icone || iconeMaterialPadraoOpcao(opcao.rotulo))" class="material-icons" aria-hidden="true" x-text="opcao.icone || iconeMaterialPadraoOpcao(opcao.rotulo)"></span>
+                              <span x-text="opcao.rotulo"></span>
+                            </button>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
           </form>
 
           <section class="bloco">
             <div class="cabecalho-bloco">
-              <h2>Documentacao Gerada</h2>
+              <h2>Plano de Testes Gerado</h2>
               <div class="linha-acoes">
                 <select x-model="formatoSaida" @change="gerarDocumentacaoFinal(false)">
                   <option value="corporativo">Corporativo</option>
                   <option value="markdown">Markdown</option>
                   <option value="jira">Jira / Zephyr</option>
+                  <option value="azure">Azure DevOps</option>
+                  <option value="html">HTML</option>
                 </select>
                 <button type="button" class="botao-secundario" @click="copiarTexto(textoDocumentacaoFinal)">Copiar</button>
                 <button type="button" class="botao-primario" @click="exportarPdf('documentacao')">Exportar PDF</button>
               </div>
             </div>
-            <div x-show="formatoSaida === 'markdown'" class="saida-texto saida-markdown" x-html="htmlMarkdownDocumentacao"></div>
-            <pre x-show="formatoSaida !== 'markdown'" class="saida-texto" x-text="textoDocumentacaoFinal || 'A documentacao formatada aparecera aqui.'"></pre>
+            <div class="saida-texto saida-markdown" x-html="htmlMarkdownDocumentacao"></div>
           </section>
         </section>
 
@@ -365,12 +472,16 @@
               <h2>Execucao de Teste</h2>
               <button type="submit" class="botao-primario">Registrar execucao</button>
             </div>
-            <div class="painel-opcoes">
+            <div class="lista-acordeons-formulario">
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Status e ambiente</strong><small>Use toggles para registrar rapido durante o teste</small></span><span class="badge" x-text="execucao.status"></span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="painel-opcoes">
               <div class="grupo-opcoes">
                 <span x-text="obterGrupoOpcoes('statusTeste').nome"></span>
                 <div class="controle-segmentado controle-segmentado--status">
                   <template x-for="statusTeste in obterRotulosGrupo('statusTeste')" :key="statusTeste">
-                    <button type="button" :class="{ ativo: valorSelecionado(execucao, 'status', statusTeste) }" @click="selecionarOpcaoExecucao('statusTeste', 'status', statusTeste)" x-text="statusTeste"></button>
+                    <button type="button" :class="[valorSelecionado(execucao, 'status', statusTeste) ? 'ativo' : '', classeOpcao(statusTeste)]" @click="selecionarOpcaoExecucao('statusTeste', 'status', statusTeste)"><i x-show="obterIconeOpcao('statusTeste', statusTeste)" :data-lucide="obterIconeOpcao('statusTeste', statusTeste)"></i><span x-text="statusTeste"></span></button>
                   </template>
                   <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('execucao', 'statusTeste') }" @click="alternarOutro('execucao', 'statusTeste')">Outro</button>
                 </div>
@@ -382,7 +493,7 @@
                   <template x-for="valor in obterValoresPersonalizados(execucao, 'statusTeste', 'status')" :key="valor">
                     <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(execucao, 'statusTeste', 'status', valor)">
                       <span x-text="valor"></span>
-                      <i data-lucide="x"></i>
+                      <span class="material-icons" aria-hidden="true">close</span>
                     </button>
                   </template>
                 </div>
@@ -403,27 +514,108 @@
                   <template x-for="valor in obterValoresPersonalizados(execucao, 'ambiente', 'ambiente')" :key="valor">
                     <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(execucao, 'ambiente', 'ambiente', valor)">
                       <span x-text="valor"></span>
-                      <i data-lucide="x"></i>
+                      <span class="material-icons" aria-hidden="true">close</span>
                     </button>
                   </template>
                 </div>
               </div>
-            </div>
-            <div class="grade-formulario">
+                  </div>
+                </div>
+              </details>
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Identificacao da execucao</strong><small>Caso, pessoas, versao, data e comentarios</small></span><span class="badge">Execucao</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="grade-formulario">
               <label class="campo-amplo">Caso de teste<select x-model="execucao.casoTeste"><option value="">Novo caso ou selecione um salvo</option><template x-for="documento in documentacoesCriadas" :key="documento.identificador"><option :value="documento.identificador" x-text="`${documento.projeto} - ${documento.funcionalidade}`"></option></template></select></label>
-              <label>Executor<input x-model="execucao.executor" type="text" /></label>
+              <label>Cliente / projeto<select x-model="execucao.clienteProjetoId" @change="selecionarClienteProjetoFormulario('execucao', execucao.clienteProjetoId)"><option value="">Sem cliente/projeto selecionado</option><template x-for="clienteProjeto in configuracoes.clientesProjetos" :key="clienteProjeto.identificador"><option :value="clienteProjeto.identificador" x-text="clienteProjeto.nome"></option></template></select></label>
+              <label>Executor QA<select x-model="execucao.qaResponsavelId" @change="selecionarQaFormulario('execucao', execucao.qaResponsavelId)"><option value="">Sem QA selecionado</option><template x-for="qa in configuracoes.qas" :key="qa.identificador"><option :value="qa.identificador" x-text="qa.nome"></option></template></select></label>
+              <label>Executor livre<input x-model="execucao.executor" type="text" /></label>
+              <label>Desenvolvedor<select x-model="execucao.desenvolvedorId" @change="selecionarDesenvolvedorFormulario('execucao', execucao.desenvolvedorId)"><option value="">Sem dev selecionado</option><template x-for="desenvolvedor in configuracoes.desenvolvedores" :key="desenvolvedor.identificador"><option :value="desenvolvedor.identificador" x-text="desenvolvedor.nome"></option></template></select></label>
               <label>Versao testada<input x-model="execucao.versaoTestada" type="text" /></label>
               <label>Data e hora<input x-model="execucao.dataHora" type="datetime-local" /></label>
+              <div class="campo-amplo lista-perfis-selecionados">
+                <template x-for="perfil in [obterCadastroSelecionado('execucao', 'clienteProjeto'), obterCadastroSelecionado('execucao', 'qa'), obterCadastroSelecionado('execucao', 'desenvolvedor')].filter(Boolean)" :key="perfil.identificador">
+                  <article class="cartao-perfil-mini">
+                    <img x-show="perfil.imagemPerfil" :src="perfil.imagemPerfil" alt="" />
+                    <span x-show="!perfil.imagemPerfil" x-text="obterIniciaisCadastro(perfil)"></span>
+                    <div><strong x-text="perfil.nome"></strong><small x-text="perfil.ocupacao"></small></div>
+                  </article>
+                </template>
+              </div>
               <label class="campo-amplo">Comentarios<textarea x-model="execucao.comentarios" rows="4"></textarea></label>
-              <label class="campo-amplo">Evidencias<textarea x-model="execucao.evidencias" rows="4"></textarea></label>
+              <div class="campo-amplo bloco-evidencias">
+                <label>Evidencias<textarea x-model="execucao.evidencias" rows="3" placeholder="Links, prints, arquivos ou observacoes"></textarea></label>
+                <label class="dropzone-evidencia" @dragover.prevent @drop.prevent="soltarEvidencias('execucao', $event)">
+                  <span class="material-icons" aria-hidden="true">attach_file</span>
+                  <span>Arraste arquivos ou clique para selecionar evidencias</span>
+                  <small>txt, csv, pdf, imagens, gif, audio, video e outros arquivos</small>
+                  <input type="file" multiple @change="selecionarEvidencias('execucao', $event)" />
+                </label>
+                <div class="grade-evidencias" x-show="evidenciaArquivos.execucao.length > 0">
+                  <template x-for="evidencia in evidenciaArquivos.execucao" :key="evidencia.identificador">
+                    <article class="cartao-evidencia">
+                      <strong x-text="evidencia.nome"></strong>
+                      <small x-text="`${evidencia.tipo} - ${formatarTamanhoArquivo(evidencia.tamanho)}`"></small>
+                      <video x-show="evidencia.video" controls :src="evidencia.url"></video>
+                      <img x-show="evidencia.imagem && !evidencia.video" :src="evidencia.url" alt="" />
+                      <audio x-show="evidencia.audio" controls :src="evidencia.url"></audio>
+                      <div class="linha-acoes">
+                        <a class="botao-secundario" :href="evidencia.url" :download="evidencia.nome">Baixar</a>
+                        <button type="button" class="botao-perigo" @click="removerEvidencia('execucao', evidencia.identificador)">Remover</button>
+                      </div>
+                      <small x-show="evidencia.partes.length > 0" x-text="`Arquivo grande dividido em ${evidencia.partes.length} partes ao exportar.`"></small>
+                    </article>
+                  </template>
+                </div>
+              </div>
+                  </div>
+                </div>
+              </details>
+              <details class="acordeon-formulario" x-show="obterCamposFormulario('execucao').length > 0">
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Campos personalizados</strong><small>Campos extras da execucao</small></span><span class="badge" x-text="obterCamposFormulario('execucao').length"></span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="campos-personalizados">
+                    <h3>Campos personalizados</h3>
+                    <div class="grade-formulario">
+                <template x-for="campo in obterCamposFormulario('execucao')" :key="campo.identificador">
+                  <div class="campo-amplo campo-personalizado">
+                    <label x-show="campo.tipo !== 'botoes'"><span x-text="campo.nome"></span><input x-show="campo.tipo === 'texto'" x-model="camposPersonalizadosValores.execucao[campo.chave]" type="text" /><textarea x-show="campo.tipo === 'area'" x-model="camposPersonalizadosValores.execucao[campo.chave]" rows="3"></textarea></label>
+                    <div x-show="campo.tipo === 'botoes'" class="grupo-opcoes">
+                      <span x-text="campo.nome"></span>
+                      <div class="lista-toggles">
+                        <template x-for="opcao in obterOpcoesGrupo(campo.grupoCampo)" :key="opcao.identificador">
+                          <button type="button" class="botao-toggle" :class="[campoPersonalizadoSelecionado('execucao', campo, opcao.rotulo) ? 'ativo' : '', classeOpcao(opcao.rotulo)]" @click="selecionarCampoPersonalizado('execucao', campo, opcao.rotulo)">
+                            <img x-show="opcao.imagem" :src="opcao.imagem" alt="" class="icone-opcao-imagem" />
+                            <span x-show="!opcao.imagem && (opcao.icone || iconeMaterialPadraoOpcao(opcao.rotulo))" class="material-icons" aria-hidden="true" x-text="opcao.icone || iconeMaterialPadraoOpcao(opcao.rotulo)"></span>
+                            <span x-text="opcao.rotulo"></span>
+                          </button>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
           </form>
           <section class="bloco">
             <div class="cabecalho-bloco">
               <h2>Resumo da Execucao</h2>
-              <button type="button" class="botao-secundario" @click="copiarTexto(resumoExecucao)">Copiar</button>
+              <div class="linha-acoes">
+                <select x-model="formatoSaidaExecucao">
+                  <option value="corporativo">Corporativo</option>
+                  <option value="markdown">Markdown</option>
+                  <option value="jira">Jira / Zephyr</option>
+                  <option value="azure">Azure DevOps</option>
+                  <option value="html">HTML</option>
+                </select>
+                <button type="button" class="botao-secundario" @click="copiarTexto(resumoExecucao)">Copiar</button>
+                <button type="button" class="botao-primario" @click="exportarPdf('execucao')">PDF</button>
+              </div>
             </div>
-            <pre class="saida-texto" x-text="resumoExecucao"></pre>
+            <div class="saida-texto saida-markdown" x-html="htmlPreviaExecucao"></div>
           </section>
         </section>
 
@@ -437,12 +629,16 @@
                 <button type="submit" class="botao-primario">Salvar bug</button>
               </div>
             </div>
-            <div class="painel-opcoes">
+            <div class="lista-acordeons-formulario">
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Triagem do bug</strong><small>Severidade, prioridade, ambiente, dispositivo e navegador</small></span><span class="badge" x-text="bug.severidade"></span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="painel-opcoes">
               <div class="grupo-opcoes">
                 <span x-text="obterGrupoOpcoes('severidade').nome"></span>
                 <div class="controle-segmentado">
                   <template x-for="severidade in obterRotulosGrupo('severidade')" :key="severidade">
-                    <button type="button" :class="{ ativo: valorSelecionado(bug, 'severidade', severidade) }" @click="selecionarOpcaoBug('severidade', 'severidade', severidade)" x-text="severidade"></button>
+                    <button type="button" :class="[valorSelecionado(bug, 'severidade', severidade) ? 'ativo' : '', classeOpcao(severidade)]" @click="selecionarOpcaoBug('severidade', 'severidade', severidade)"><i x-show="obterIconeOpcao('severidade', severidade)" :data-lucide="obterIconeOpcao('severidade', severidade)"></i><span x-text="severidade"></span></button>
                   </template>
                   <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('bug', 'severidade') }" @click="alternarOutro('bug', 'severidade')">Outro</button>
                 </div>
@@ -454,7 +650,7 @@
                   <template x-for="valor in obterValoresPersonalizados(bug, 'severidade', 'severidade')" :key="valor">
                     <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'severidade', 'severidade', valor)">
                       <span x-text="valor"></span>
-                      <i data-lucide="x"></i>
+                      <span class="material-icons" aria-hidden="true">close</span>
                     </button>
                   </template>
                 </div>
@@ -463,7 +659,7 @@
                 <span x-text="obterGrupoOpcoes('prioridade').nome"></span>
                 <div class="controle-segmentado">
                   <template x-for="prioridade in obterRotulosGrupo('prioridade')" :key="prioridade">
-                    <button type="button" :class="{ ativo: valorSelecionado(bug, 'prioridade', prioridade) }" @click="selecionarOpcaoBug('prioridade', 'prioridade', prioridade)" x-text="prioridade"></button>
+                    <button type="button" :class="[valorSelecionado(bug, 'prioridade', prioridade) ? 'ativo' : '', classeOpcao(prioridade)]" @click="selecionarOpcaoBug('prioridade', 'prioridade', prioridade)"><i x-show="obterIconeOpcao('prioridade', prioridade)" :data-lucide="obterIconeOpcao('prioridade', prioridade)"></i><span x-text="prioridade"></span></button>
                   </template>
                   <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('bug', 'prioridade') }" @click="alternarOutro('bug', 'prioridade')">Outro</button>
                 </div>
@@ -475,7 +671,7 @@
                   <template x-for="valor in obterValoresPersonalizados(bug, 'prioridade', 'prioridade')" :key="valor">
                     <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'prioridade', 'prioridade', valor)">
                       <span x-text="valor"></span>
-                      <i data-lucide="x"></i>
+                      <span class="material-icons" aria-hidden="true">close</span>
                     </button>
                   </template>
                 </div>
@@ -496,7 +692,7 @@
                   <template x-for="valor in obterValoresPersonalizados(bug, 'ambiente', 'ambiente')" :key="valor">
                     <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'ambiente', 'ambiente', valor)">
                       <span x-text="valor"></span>
-                      <i data-lucide="x"></i>
+                      <span class="material-icons" aria-hidden="true">close</span>
                     </button>
                   </template>
                 </div>
@@ -517,7 +713,7 @@
                   <template x-for="valor in obterValoresPersonalizados(bug, 'dispositivo', 'dispositivo')" :key="valor">
                     <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'dispositivo', 'dispositivo', valor)">
                       <span x-text="valor"></span>
-                      <i data-lucide="x"></i>
+                      <span class="material-icons" aria-hidden="true">close</span>
                     </button>
                   </template>
                 </div>
@@ -538,13 +734,30 @@
                   <template x-for="valor in obterValoresPersonalizados(bug, 'navegador', 'navegador')" :key="valor">
                     <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'navegador', 'navegador', valor)">
                       <span x-text="valor"></span>
-                      <i data-lucide="x"></i>
+                      <span class="material-icons" aria-hidden="true">close</span>
                     </button>
                   </template>
                 </div>
               </div>
-            </div>
-            <div class="grade-formulario">
+                  </div>
+                </div>
+              </details>
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Descricao e reproducao</strong><small>Contexto, passos, resultado, impacto e evidencias</small></span><span class="badge">Bug</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="grade-formulario">
+              <label>Cliente / projeto<select x-model="bug.clienteProjetoId" @change="selecionarClienteProjetoFormulario('bug', bug.clienteProjetoId)"><option value="">Sem cliente/projeto selecionado</option><template x-for="clienteProjeto in configuracoes.clientesProjetos" :key="clienteProjeto.identificador"><option :value="clienteProjeto.identificador" x-text="clienteProjeto.nome"></option></template></select></label>
+              <label>QA criador<select x-model="bug.qaResponsavelId" @change="selecionarQaFormulario('bug', bug.qaResponsavelId)"><option value="">Sem QA selecionado</option><template x-for="qa in configuracoes.qas" :key="qa.identificador"><option :value="qa.identificador" x-text="qa.nome"></option></template></select></label>
+              <label>Desenvolvedor<select x-model="bug.desenvolvedorId" @change="selecionarDesenvolvedorFormulario('bug', bug.desenvolvedorId)"><option value="">Sem dev selecionado</option><template x-for="desenvolvedor in configuracoes.desenvolvedores" :key="desenvolvedor.identificador"><option :value="desenvolvedor.identificador" x-text="desenvolvedor.nome"></option></template></select></label>
+              <div class="campo-amplo lista-perfis-selecionados">
+                <template x-for="perfil in [obterCadastroSelecionado('bug', 'clienteProjeto'), obterCadastroSelecionado('bug', 'qa'), obterCadastroSelecionado('bug', 'desenvolvedor')].filter(Boolean)" :key="perfil.identificador">
+                  <article class="cartao-perfil-mini">
+                    <img x-show="perfil.imagemPerfil" :src="perfil.imagemPerfil" alt="" />
+                    <span x-show="!perfil.imagemPerfil" x-text="obterIniciaisCadastro(perfil)"></span>
+                    <div><strong x-text="perfil.nome"></strong><small x-text="perfil.ocupacao"></small></div>
+                  </article>
+                </template>
+              </div>
               <label>Projeto<input x-model="bug.projeto" type="text" /></label>
               <label>Modulo<input x-model="bug.modulo" type="text" /></label>
               <label>Funcionalidade<input x-model="bug.funcionalidade" type="text" /></label>
@@ -556,14 +769,38 @@
               <label class="campo-amplo">Passos para reproduzir<textarea x-model="bug.passosReproduzir" rows="4"></textarea></label>
               <label>Resultado esperado<textarea x-model="bug.resultadoEsperado" rows="3"></textarea></label>
               <label>Resultado obtido<textarea x-model="bug.resultadoObtido" rows="3"></textarea></label>
-              <label>Evidencias<textarea x-model="bug.evidencias" rows="3"></textarea></label>
+              <div class="campo-amplo bloco-evidencias">
+                <label>Evidencias<textarea x-model="bug.evidencias" rows="3" placeholder="Links, prints, arquivos ou observacoes"></textarea></label>
+                <label class="dropzone-evidencia" @dragover.prevent @drop.prevent="soltarEvidencias('bug', $event)">
+                  <span class="material-icons" aria-hidden="true">attach_file</span>
+                  <span>Arraste arquivos ou clique para selecionar evidencias</span>
+                  <small>txt, csv, pdf, imagens, gif, audio, video e outros arquivos</small>
+                  <input type="file" multiple @change="selecionarEvidencias('bug', $event)" />
+                </label>
+                <div class="grade-evidencias" x-show="evidenciaArquivos.bug.length > 0">
+                  <template x-for="evidencia in evidenciaArquivos.bug" :key="evidencia.identificador">
+                    <article class="cartao-evidencia">
+                      <strong x-text="evidencia.nome"></strong>
+                      <small x-text="`${evidencia.tipo} - ${formatarTamanhoArquivo(evidencia.tamanho)}`"></small>
+                      <video x-show="evidencia.video" controls :src="evidencia.url"></video>
+                      <img x-show="evidencia.imagem && !evidencia.video" :src="evidencia.url" alt="" />
+                      <audio x-show="evidencia.audio" controls :src="evidencia.url"></audio>
+                      <div class="linha-acoes">
+                        <a class="botao-secundario" :href="evidencia.url" :download="evidencia.nome">Baixar</a>
+                        <button type="button" class="botao-perigo" @click="removerEvidencia('bug', evidencia.identificador)">Remover</button>
+                      </div>
+                      <small x-show="evidencia.partes.length > 0" x-text="`Arquivo grande dividido em ${evidencia.partes.length} partes ao exportar.`"></small>
+                    </article>
+                  </template>
+                </div>
+              </div>
               <label>Impacto<textarea x-model="bug.impacto" rows="3"></textarea></label>
               <label>Sugestao de correcao<textarea x-model="bug.sugestaoCorrecao" rows="3"></textarea></label>
               <div class="grupo-opcoes campo-amplo">
                 <span x-text="obterGrupoOpcoes('statusBug').nome"></span>
                 <div class="controle-segmentado controle-segmentado--status">
                   <template x-for="statusBug in obterRotulosGrupo('statusBug')" :key="statusBug">
-                    <button type="button" :class="{ ativo: valorSelecionado(bug, 'status', statusBug) }" @click="selecionarOpcaoBug('statusBug', 'status', statusBug)" x-text="statusBug"></button>
+                    <button type="button" :class="[valorSelecionado(bug, 'status', statusBug) ? 'ativo' : '', classeOpcao(statusBug)]" @click="selecionarOpcaoBug('statusBug', 'status', statusBug)"><i x-show="obterIconeOpcao('statusBug', statusBug)" :data-lucide="obterIconeOpcao('statusBug', statusBug)"></i><span x-text="statusBug"></span></button>
                   </template>
                   <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('bug', 'statusBug') }" @click="alternarOutro('bug', 'statusBug')">Outro</button>
                 </div>
@@ -575,16 +812,59 @@
                   <template x-for="valor in obterValoresPersonalizados(bug, 'statusBug', 'status')" :key="valor">
                     <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'statusBug', 'status', valor)">
                       <span x-text="valor"></span>
-                      <i data-lucide="x"></i>
+                      <span class="material-icons" aria-hidden="true">close</span>
                     </button>
                   </template>
                 </div>
               </div>
+                  </div>
+                </div>
+              </details>
+              <details class="acordeon-formulario" x-show="obterCamposFormulario('bug').length > 0">
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Campos personalizados</strong><small>Campos extras para o report</small></span><span class="badge" x-text="obterCamposFormulario('bug').length"></span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="campos-personalizados">
+                    <h3>Campos personalizados</h3>
+                    <div class="grade-formulario">
+                <template x-for="campo in obterCamposFormulario('bug')" :key="campo.identificador">
+                  <div class="campo-amplo campo-personalizado">
+                    <label x-show="campo.tipo !== 'botoes'"><span x-text="campo.nome"></span><input x-show="campo.tipo === 'texto'" x-model="camposPersonalizadosValores.bug[campo.chave]" type="text" /><textarea x-show="campo.tipo === 'area'" x-model="camposPersonalizadosValores.bug[campo.chave]" rows="3"></textarea></label>
+                    <div x-show="campo.tipo === 'botoes'" class="grupo-opcoes">
+                      <span x-text="campo.nome"></span>
+                      <div class="lista-toggles">
+                        <template x-for="opcao in obterOpcoesGrupo(campo.grupoCampo)" :key="opcao.identificador">
+                          <button type="button" class="botao-toggle" :class="[campoPersonalizadoSelecionado('bug', campo, opcao.rotulo) ? 'ativo' : '', classeOpcao(opcao.rotulo)]" @click="selecionarCampoPersonalizado('bug', campo, opcao.rotulo)">
+                            <img x-show="opcao.imagem" :src="opcao.imagem" alt="" class="icone-opcao-imagem" />
+                            <span x-show="!opcao.imagem && (opcao.icone || iconeMaterialPadraoOpcao(opcao.rotulo))" class="material-icons" aria-hidden="true" x-text="opcao.icone || iconeMaterialPadraoOpcao(opcao.rotulo)"></span>
+                            <span x-text="opcao.rotulo"></span>
+                          </button>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
           </form>
           <section class="bloco">
-            <h2>Bug Report Gerado</h2>
-            <pre class="saida-texto" x-text="textoBugReport"></pre>
+            <div class="cabecalho-bloco">
+              <h2>Bug Report Gerado</h2>
+              <div class="linha-acoes">
+                <select x-model="formatoSaidaBug">
+                  <option value="corporativo">Corporativo</option>
+                  <option value="markdown">Markdown</option>
+                  <option value="jira">Jira / Zephyr</option>
+                  <option value="azure">Azure DevOps</option>
+                  <option value="html">HTML</option>
+                </select>
+                <button type="button" class="botao-secundario" @click="copiarTexto(textoBugReport)">Copiar</button>
+                <button type="button" class="botao-primario" @click="exportarPdf('bug')">PDF</button>
+              </div>
+            </div>
+            <div class="saida-texto saida-markdown" x-html="htmlPreviaBug"></div>
           </section>
         </section>
 
@@ -592,13 +872,18 @@
           <div class="grade-dupla">
             <form class="bloco formulario" @submit.prevent="salvarSnippet()">
               <div class="cabecalho-bloco"><h2>Snippet de QA</h2><button type="submit" class="botao-primario">Salvar</button></div>
-              <div class="grade-formulario grade-formulario--simples">
-                <label>Titulo<input x-model="snippetEdicao.titulo" type="text" /></label>
-                <label>Categoria<input x-model="snippetEdicao.categoria" type="text" /></label>
-                <label>Tags<input x-model="snippetEdicao.tags" type="text" placeholder="login, validacao" /></label>
-                <label>Descricao<textarea x-model="snippetEdicao.descricao" rows="3"></textarea></label>
-                <label>Texto reutilizavel<textarea x-model="snippetEdicao.texto" rows="6"></textarea></label>
-              </div>
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Conteudo do snippet</strong><small>Titulo, categoria, tags e texto reutilizavel</small></span><span class="badge">Snippet</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="grade-formulario grade-formulario--simples">
+                    <label>Titulo<input x-model="snippetEdicao.titulo" type="text" /></label>
+                    <label>Categoria<input x-model="snippetEdicao.categoria" type="text" /></label>
+                    <label>Tags<input x-model="snippetEdicao.tags" type="text" placeholder="login, validacao" /></label>
+                    <label>Descricao<textarea x-model="snippetEdicao.descricao" rows="3"></textarea></label>
+                    <label>Texto reutilizavel<textarea x-model="snippetEdicao.texto" rows="6"></textarea></label>
+                  </div>
+                </div>
+              </details>
             </form>
             <section class="bloco">
               <div class="cabecalho-bloco"><h2>Biblioteca</h2><input x-model="buscaSnippet" type="search" placeholder="Buscar snippet" /></div>
@@ -609,9 +894,9 @@
                     <small x-text="snippet.categoria"></small>
                     <p x-text="snippet.descricao"></p>
                     <div class="linha-acoes">
-                      <button type="button" class="botao-secundario" @click="copiarTexto(snippet.texto)">Copiar</button>
-                      <button type="button" class="botao-secundario" @click="editarSnippet(snippet)">Editar</button>
-                      <button type="button" class="botao-perigo" @click="excluirSnippet(snippet.identificador)">Excluir</button>
+                      <button type="button" class="botao-secundario" @click="copiarTexto(snippet.texto)"><span class="material-icons" aria-hidden="true">content_copy</span>Copiar</button>
+                      <button type="button" class="botao-secundario" @click="editarSnippet(snippet)"><span class="material-icons" aria-hidden="true">edit</span>Editar</button>
+                      <button type="button" class="botao-perigo" @click="excluirSnippet(snippet.identificador)"><span class="material-icons" aria-hidden="true">delete</span>Excluir</button>
                     </div>
                   </article>
                 </template>
@@ -624,12 +909,17 @@
           <div class="grade-dupla">
             <form class="bloco formulario" @submit.prevent="salvarTermoGlossario()">
               <div class="cabecalho-bloco"><h2>Termo Personalizado</h2><button type="submit" class="botao-primario">Salvar termo</button></div>
-              <div class="grade-formulario grade-formulario--simples">
-                <label>Nome<input x-model="termoGlossarioEdicao.nome" type="text" /></label>
-                <label>Categoria<input x-model="termoGlossarioEdicao.categoria" type="text" /></label>
-                <label>Definicao<textarea x-model="termoGlossarioEdicao.definicao" rows="4"></textarea></label>
-                <label>Exemplo pratico<textarea x-model="termoGlossarioEdicao.exemplo" rows="4"></textarea></label>
-              </div>
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Definicao do termo</strong><small>Nome, categoria, conceito e exemplo</small></span><span class="badge">Glossario</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="grade-formulario grade-formulario--simples">
+                    <label>Nome<input x-model="termoGlossarioEdicao.nome" type="text" /></label>
+                    <label>Categoria<input x-model="termoGlossarioEdicao.categoria" type="text" /></label>
+                    <label>Definicao<textarea x-model="termoGlossarioEdicao.definicao" rows="4"></textarea></label>
+                    <label>Exemplo pratico<textarea x-model="termoGlossarioEdicao.exemplo" rows="4"></textarea></label>
+                  </div>
+                </div>
+              </details>
             </form>
             <section class="bloco">
               <div class="cabecalho-bloco"><h2>Glossario de QA</h2><input x-model="buscaGlossario" type="search" placeholder="Buscar termo" /></div>
@@ -641,8 +931,8 @@
                     <p x-text="termo.definicao"></p>
                     <small x-text="`Exemplo: ${termo.exemplo}`"></small>
                     <div class="linha-acoes">
-                      <button type="button" class="botao-secundario" @click="editarTermoGlossario(termo)">Editar</button>
-                      <button type="button" class="botao-perigo" @click="excluirTermoGlossario(termo.identificador)">Excluir</button>
+                      <button type="button" class="botao-secundario" @click="editarTermoGlossario(termo)"><span class="material-icons" aria-hidden="true">edit</span>Editar</button>
+                      <button type="button" class="botao-perigo" @click="excluirTermoGlossario(termo.identificador)"><span class="material-icons" aria-hidden="true">delete</span>Excluir</button>
                     </div>
                   </article>
                 </template>
@@ -672,54 +962,178 @@
         <section x-show="telaAtual === 'configuracoes'" class="painel">
           <form class="bloco formulario" @submit.prevent="salvarConfiguracoes()">
             <div class="cabecalho-bloco"><h2>Configuracoes</h2><button type="submit" class="botao-primario">Salvar configuracoes</button></div>
-            <div class="grade-formulario">
-              <label>Nome do profissional<input x-model="configuracoes.nomeProfissional" type="text" /></label>
-              <label>Cargo<input x-model="configuracoes.cargo" type="text" /></label>
-              <label>Empresa ou cliente<input x-model="configuracoes.empresaCliente" type="text" /></label>
-              <label>Projeto padrao<input x-model="configuracoes.projetoPadrao" type="text" /></label>
-              <label>Ambiente padrao<input x-model="configuracoes.ambientePadrao" type="text" /></label>
-              <label>Tema<select x-model="configuracoes.tema"><option value="claro">Claro</option><option value="escuro">Escuro</option></select></label>
-              <label>Preferencia de exportacao<select x-model="configuracoes.preferenciaExportacao"><option>PDF</option><option>Markdown</option><option>Jira / Zephyr</option></select></label>
-              <label>Modelo padrao<select x-model="configuracoes.modeloPadrao"><option value="corporativo">Corporativo</option><option value="markdown">Markdown</option><option value="jira">Jira / Zephyr</option></select></label>
-              <label class="campo-amplo">Cabecalho do PDF<textarea x-model="configuracoes.cabecalhoPdf" rows="3"></textarea></label>
-              <label class="campo-amplo">Rodape do PDF<textarea x-model="configuracoes.rodapePdf" rows="3"></textarea></label>
-              <label>Logo opcional<input x-model="configuracoes.logoOpcional" type="text" placeholder="URL do logo" /></label>
-              <label class="checkbox"><input x-model="configuracoes.atalhosAtivos" type="checkbox" /> Ativar atalhos de teclado</label>
-            </div>
-            <div class="linha-acoes linha-acoes--espacada">
-              <button type="button" class="botao-secundario" @click="exportarBackup()">Exportar backup JSON</button>
-              <label class="botao-secundario botao-arquivo">Importar backup JSON<input type="file" accept="application/json" @change="importarBackup($event)" /></label>
-              <button type="button" class="botao-perigo" @click="limparDadosSalvos()">Limpar dados salvos</button>
+            <div class="lista-acordeons-formulario">
+              <details class="acordeon-formulario" open>
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Preferencias gerais</strong><small>Identidade, tema e modelo padrao</small></span><span class="badge">Geral</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="grade-formulario">
+                    <label>Projeto padrao<input x-model="configuracoes.projetoPadrao" type="text" /></label>
+                    <label>Ambiente padrao<input x-model="configuracoes.ambientePadrao" type="text" /></label>
+                    <label>Tema<select x-model="configuracoes.tema"><option value="claro">Claro</option><option value="escuro">Escuro</option></select></label>
+                    <label>Preferencia de exportacao<select x-model="configuracoes.preferenciaExportacao"><option>PDF</option><option>Markdown</option><option>Jira / Zephyr</option></select></label>
+                    <label>Modelo padrao<select x-model="configuracoes.modeloPadrao"><option value="corporativo">Corporativo</option><option value="markdown">Markdown</option><option value="jira">Jira / Zephyr</option></select></label>
+                    <label class="campo-amplo">Cabecalho do PDF<textarea x-model="configuracoes.cabecalhoPdf" rows="3"></textarea></label>
+                    <label class="campo-amplo">Rodape do PDF<textarea x-model="configuracoes.rodapePdf" rows="3"></textarea></label>
+                    <label>Logo opcional<input x-model="configuracoes.logoOpcional" type="text" placeholder="URL do logo" /></label>
+                    <label class="checkbox"><input x-model="configuracoes.atalhosAtivos" type="checkbox" /> Ativar atalhos de teclado</label>
+                  </div>
+                </div>
+              </details>
+              <details class="acordeon-formulario">
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Backup e dados locais</strong><small>Exportar, importar ou limpar dados salvos</small></span><span class="badge">Local</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="linha-acoes linha-acoes--espacada">
+                    <button type="button" class="botao-secundario" @click="exportarBackup()">Exportar backup JSON</button>
+                    <label class="botao-secundario botao-arquivo">Importar backup JSON<input type="file" accept="application/json" @change="importarBackup($event)" /></label>
+                    <button type="button" class="botao-perigo" @click="limparDadosSalvos()">Limpar dados salvos</button>
+                  </div>
+                </div>
+              </details>
             </div>
           </form>
+
+          <section class="bloco">
+            <div class="cabecalho-bloco">
+              <h2>Cadastros de QAs, Devs e Clientes</h2>
+              <button type="button" class="botao-primario" @click="salvarConfiguracoes()">Salvar cadastros</button>
+            </div>
+            <div class="grade-cadastros">
+              <article class="cartao-configuracao">
+                <h3>QAs</h3>
+                <div class="grade-formulario">
+                  <label>Nome<input x-model="novoQa.nome" type="text" placeholder="Ana QA" /></label>
+                  <label>Ocupacao<input x-model="novoQa.ocupacao" type="text" placeholder="QA Engineer" /></label>
+                  <label class="botao-secundario botao-arquivo">Imagem de perfil<input type="file" accept="image/*" @change="selecionarImagemCadastro($event, novoQa)" /></label>
+                  <button type="button" class="botao-primario" @click="criarCadastroPerfil('qa')">Cadastrar QA</button>
+                </div>
+                <div class="lista-cadastros">
+                  <template x-for="qa in configuracoes.qas" :key="qa.identificador">
+                    <article class="cartao-cadastro">
+                      <img x-show="qa.imagemPerfil" :src="qa.imagemPerfil" alt="" />
+                      <span x-show="!qa.imagemPerfil" x-text="obterIniciaisCadastro(qa)"></span>
+                      <div><input x-model="qa.nome" type="text" /><input x-model="qa.ocupacao" type="text" /></div>
+                      <label class="botao-icone" title="Trocar imagem"><span class="material-icons" aria-hidden="true">add_photo_alternate</span><input type="file" accept="image/*" @change="selecionarImagemCadastro($event, qa)" /></label>
+                      <button type="button" class="botao-icone" @click="excluirCadastroPerfil('qa', qa.identificador)" title="Excluir QA"><span class="material-icons" aria-hidden="true">delete</span></button>
+                    </article>
+                  </template>
+                </div>
+              </article>
+
+              <article class="cartao-configuracao">
+                <h3>Desenvolvedores</h3>
+                <div class="grade-formulario">
+                  <label>Nome<input x-model="novoDesenvolvedor.nome" type="text" placeholder="Bruno Dev" /></label>
+                  <label>Ocupacao<input x-model="novoDesenvolvedor.ocupacao" type="text" placeholder="Front-end Engineer" /></label>
+                  <label class="botao-secundario botao-arquivo">Imagem de perfil<input type="file" accept="image/*" @change="selecionarImagemCadastro($event, novoDesenvolvedor)" /></label>
+                  <button type="button" class="botao-primario" @click="criarCadastroPerfil('desenvolvedor')">Cadastrar Dev</button>
+                </div>
+                <div class="lista-cadastros">
+                  <template x-for="desenvolvedor in configuracoes.desenvolvedores" :key="desenvolvedor.identificador">
+                    <article class="cartao-cadastro">
+                      <img x-show="desenvolvedor.imagemPerfil" :src="desenvolvedor.imagemPerfil" alt="" />
+                      <span x-show="!desenvolvedor.imagemPerfil" x-text="obterIniciaisCadastro(desenvolvedor)"></span>
+                      <div><input x-model="desenvolvedor.nome" type="text" /><input x-model="desenvolvedor.ocupacao" type="text" /></div>
+                      <label class="botao-icone" title="Trocar imagem"><span class="material-icons" aria-hidden="true">add_photo_alternate</span><input type="file" accept="image/*" @change="selecionarImagemCadastro($event, desenvolvedor)" /></label>
+                      <button type="button" class="botao-icone" @click="excluirCadastroPerfil('desenvolvedor', desenvolvedor.identificador)" title="Excluir dev"><span class="material-icons" aria-hidden="true">delete</span></button>
+                    </article>
+                  </template>
+                </div>
+              </article>
+
+              <article class="cartao-configuracao">
+                <h3>Clientes / Projetos</h3>
+                <div class="grade-formulario">
+                  <label>Nome<input x-model="novoClienteProjeto.nome" type="text" placeholder="Cliente Alpha" /></label>
+                  <label>Ocupacao<input x-model="novoClienteProjeto.ocupacao" type="text" placeholder="Projeto Financeiro" /></label>
+                  <label class="botao-secundario botao-arquivo">Imagem / logo<input type="file" accept="image/*" @change="selecionarImagemCadastro($event, novoClienteProjeto)" /></label>
+                  <button type="button" class="botao-primario" @click="criarCadastroPerfil('clienteProjeto')">Cadastrar cliente</button>
+                </div>
+                <div class="lista-cadastros">
+                  <template x-for="clienteProjeto in configuracoes.clientesProjetos" :key="clienteProjeto.identificador">
+                    <article class="cartao-cadastro">
+                      <img x-show="clienteProjeto.imagemPerfil" :src="clienteProjeto.imagemPerfil" alt="" />
+                      <span x-show="!clienteProjeto.imagemPerfil" x-text="obterIniciaisCadastro(clienteProjeto)"></span>
+                      <div><input x-model="clienteProjeto.nome" type="text" /><input x-model="clienteProjeto.ocupacao" type="text" /></div>
+                      <label class="botao-icone" title="Trocar imagem"><span class="material-icons" aria-hidden="true">add_photo_alternate</span><input type="file" accept="image/*" @change="selecionarImagemCadastro($event, clienteProjeto)" /></label>
+                      <button type="button" class="botao-icone" @click="excluirCadastroPerfil('clienteProjeto', clienteProjeto.identificador)" title="Excluir cliente"><span class="material-icons" aria-hidden="true">delete</span></button>
+                    </article>
+                  </template>
+                </div>
+              </article>
+            </div>
+          </section>
 
           <section class="bloco">
             <div class="cabecalho-bloco">
               <h2>Opcoes dos Botoes</h2>
               <button type="button" class="botao-primario" @click="salvarConfiguracoes()">Salvar opcoes</button>
             </div>
-            <div class="grade-opcoes-configuracao">
+            <div class="grade-formulario">
+              <label>Nova sessao / grupo<input x-model="novoGrupoOpcao.nome" type="text" placeholder="Pais" /></label>
+              <label>Chave tecnica<input x-model="novoGrupoOpcao.campo" type="text" placeholder="pais" /></label>
+              <label class="checkbox"><input x-model="novoGrupoOpcao.obrigatorio" type="checkbox" /> Obrigatorio</label>
+              <label class="checkbox"><input x-model="novoGrupoOpcao.selecaoMultipla" type="checkbox" /> Multiselect</label>
+              <button type="button" class="botao-secundario" @click="criarGrupoOpcoesPersonalizado()">Criar sessao</button>
+            </div>
+            <div class="lista-acordeons-configuracao">
               <template x-for="grupo in configuracoes.gruposOpcoes" :key="grupo.identificador">
-                <article class="cartao-configuracao">
-                  <div class="cabecalho-configuracao">
-                    <label>Nome do grupo<input x-model="grupo.nome" type="text" /></label>
-                    <div class="linha-acoes">
-                      <label class="checkbox"><input x-model="grupo.obrigatorio" type="checkbox" /> Obrigatorio</label>
-                      <label class="checkbox"><input x-model="grupo.selecaoMultipla" type="checkbox" /> Multiselect</label>
+                <article class="cartao-configuracao cartao-configuracao--acordeon" :class="{ aberto: grupoConfiguracaoAberto(grupo.campo) }">
+                  <button type="button" class="cabecalho-acordeon" @click="alternarGrupoConfiguracao(grupo.campo)" :aria-expanded="grupoConfiguracaoAberto(grupo.campo)">
+                    <span class="icone-acordeon"><i data-lucide="chevron-right"></i></span>
+                    <span class="resumo-acordeon">
+                      <strong x-text="grupo.nome"></strong>
+                      <small x-text="`${grupo.opcoes.length} opcao(oes) | ${grupo.selecaoMultipla ? 'multiselect' : 'selecao unica'} | ${grupo.obrigatorio ? 'obrigatorio' : 'opcional'}`"></small>
+                    </span>
+                    <span class="badge" x-text="grupo.campo"></span>
+                  </button>
+                  <div class="corpo-acordeon" x-show="grupoConfiguracaoAberto(grupo.campo)" x-transition>
+                    <div class="cabecalho-configuracao">
+                      <label>Nome do grupo<input x-model="grupo.nome" type="text" /></label>
+                      <div class="linha-acoes">
+                        <label class="checkbox"><input x-model="grupo.obrigatorio" type="checkbox" /> Obrigatorio</label>
+                        <label class="checkbox"><input x-model="grupo.selecaoMultipla" type="checkbox" /> Multiselect</label>
+                        <button type="button" class="botao-perigo" @click="excluirGrupoOpcoesPersonalizado(grupo.campo)">Excluir grupo</button>
+                      </div>
+                    </div>
+                    <div class="lista-opcoes-configuracao">
+                      <template x-for="(opcao, indiceOpcao) in grupo.opcoes" :key="opcao.identificador">
+                        <div class="opcao-configuracao opcao-configuracao--detalhada">
+                          <input x-model="opcao.rotulo" type="text" placeholder="Rotulo" />
+                          <input x-model="opcao.icone" type="text" placeholder="Icone Material ou emoji" />
+                          <input x-model="opcao.imagem" type="text" placeholder="URL da imagem/bandeira" />
+                          <button type="button" class="botao-icone" @click="excluirOpcaoConfiguracao(grupo, indiceOpcao)" title="Excluir opcao"><span class="material-icons" aria-hidden="true">delete</span></button>
+                        </div>
+                      </template>
+                    </div>
+                    <div class="entrada-inline">
+                      <input x-model="novaOpcaoGrupo[grupo.campo]" type="text" placeholder="Nova opcao" />
+                      <button type="button" class="botao-secundario" @click="adicionarOpcaoConfiguracao(grupo)">Adicionar</button>
                     </div>
                   </div>
-                  <div class="lista-opcoes-configuracao">
-                    <template x-for="(opcao, indiceOpcao) in grupo.opcoes" :key="opcao.identificador">
-                      <div class="opcao-configuracao">
-                        <input x-model="opcao.rotulo" type="text" />
-                        <button type="button" class="botao-icone" @click="excluirOpcaoConfiguracao(grupo, indiceOpcao)" title="Excluir opcao"><i data-lucide="trash-2"></i></button>
-                      </div>
-                    </template>
-                  </div>
-                  <div class="entrada-inline">
-                    <input x-model="novaOpcaoGrupo[grupo.campo]" type="text" placeholder="Nova opcao" />
-                    <button type="button" class="botao-secundario" @click="adicionarOpcaoConfiguracao(grupo)">Adicionar</button>
-                  </div>
+                </article>
+              </template>
+            </div>
+          </section>
+
+          <section class="bloco">
+            <div class="cabecalho-bloco">
+              <h2>Campos Personalizados dos Relatorios</h2>
+              <button type="button" class="botao-primario" @click="criarCampoPersonalizado()">Criar campo</button>
+            </div>
+            <div class="grade-formulario">
+              <label>Nome<input x-model="novoCampoPersonalizado.nome" type="text" placeholder="Pais" /></label>
+              <label>Chave<input x-model="novoCampoPersonalizado.chave" type="text" placeholder="pais" /></label>
+              <label>Tipo<select x-model="novoCampoPersonalizado.tipo"><option value="texto">Texto curto</option><option value="area">Texto longo</option><option value="botoes">Botoes</option></select></label>
+              <label>Destino<select x-model="novoCampoPersonalizado.destino"><option value="todos">Todos</option><option value="documentacao">Plano de testes</option><option value="execucao">Execucao</option><option value="bug">Bug report</option></select></label>
+              <label>Grupo de botoes<select x-model="novoCampoPersonalizado.grupoCampo"><option value="">Selecione</option><template x-for="grupo in configuracoes.gruposOpcoes" :key="grupo.identificador"><option :value="grupo.campo" x-text="grupo.nome"></option></template></select></label>
+              <label class="checkbox"><input x-model="novoCampoPersonalizado.obrigatorio" type="checkbox" /> Obrigatorio</label>
+            </div>
+            <div class="grade-cartoes">
+              <template x-for="campo in configuracoes.camposPersonalizados" :key="campo.identificador">
+                <article class="cartao-lista">
+                  <strong x-text="campo.nome"></strong>
+                  <small x-text="`${campo.tipo} | ${campo.destino}`"></small>
+                  <button type="button" class="botao-perigo" @click="excluirCampoPersonalizado(campo.identificador)">Excluir</button>
                 </article>
               </template>
             </div>
@@ -790,3 +1204,5 @@
     <div id="areaPdf" class="area-pdf" aria-hidden="true"></div>
   </body>
 </html>
+
+

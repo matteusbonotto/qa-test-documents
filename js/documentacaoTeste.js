@@ -13,6 +13,9 @@ window.documentacaoTeste = (() => {
     return {
       identificador: crypto.randomUUID(),
       criadoEm: new Date().toISOString(),
+      qaResponsavelId: "",
+      desenvolvedorId: "",
+      clienteProjetoId: "",
       projeto: configuracoes.projetoPadrao || "",
       modulo: "",
       funcionalidade: "",
@@ -42,7 +45,7 @@ window.documentacaoTeste = (() => {
       .map((passo, indice) => `${indice + 1}. Acao: ${passo.acaoExecutada || "-"}\n   Esperado: ${passo.resultadoEsperado || "-"}\n   Obtido: ${passo.resultadoObtido || "-"}\n   Status: ${passo.status}`)
       .join("\n\n");
 
-    return `DOCUMENTACAO DE TESTE
+    return `PLANO DE TESTES
 
 Identificacao
 Projeto: ${documentacao.projeto || "-"}
@@ -91,7 +94,7 @@ ${documentacao.observacoes || "-"}`;
       .map((passo, indice) => `| ${indice + 1} | ${passo.acaoExecutada || "-"} | ${passo.resultadoEsperado || "-"} | ${passo.resultadoObtido || "-"} | ${passo.status} |`)
       .join("\n");
 
-    return `# Documentacao de Teste
+    return `# Plano de Testes
 
 ## Identificacao
 - **Projeto:** ${documentacao.projeto || "-"}
@@ -138,7 +141,7 @@ ${documentacao.status}`;
       .map((passo, indice) => `#${indice + 1} ${passo.acaoExecutada || "-"} | Esperado: ${passo.resultadoEsperado || "-"} | Obtido: ${passo.resultadoObtido || "-"} | Status: ${passo.status}`)
       .join("\n");
 
-    return `h2. Caso de Teste - ${documentacao.funcionalidade || "Funcionalidade"}
+    return `h2. Plano de Testes - ${documentacao.funcionalidade || "Funcionalidade"}
 
 *Projeto:* ${documentacao.projeto || "-"}
 *Modulo:* ${documentacao.modulo || "-"}
@@ -168,6 +171,29 @@ ${documentacao.evidencias || "-"}
 *Status final:* ${documentacao.status}`;
   }
 
+  function gerarAzure(documentacao, configuracoes) {
+    return gerarMarkdown(documentacao, configuracoes)
+      .replace("# Plano de Testes", "# [Plano de Testes]")
+      .replaceAll("## ", "### ");
+  }
+
+  function gerarHtml(documentacao, configuracoes) {
+    return `<article>
+  <h1>Plano de Testes</h1>
+  <h2>Identificacao</h2>
+  <ul>
+    <li><strong>Projeto:</strong> ${documentacao.projeto || "-"}</li>
+    <li><strong>Modulo:</strong> ${documentacao.modulo || "-"}</li>
+    <li><strong>Funcionalidade:</strong> ${documentacao.funcionalidade || "-"}</li>
+    <li><strong>QA:</strong> ${configuracoes.nomeProfissional || "-"}</li>
+  </ul>
+  <h2>Cenario</h2>
+  <p>${documentacao.cenario || "-"}</p>
+  <h2>Resultado esperado</h2>
+  <p>${documentacao.resultadoEsperado || "-"}</p>
+</article>`;
+  }
+
   function gerarTexto(documentacao, configuracoes, formato) {
     if (formato === "markdown") {
       return gerarMarkdown(documentacao, configuracoes);
@@ -175,6 +201,14 @@ ${documentacao.evidencias || "-"}
 
     if (formato === "jira") {
       return gerarJira(documentacao);
+    }
+
+    if (formato === "azure") {
+      return gerarAzure(documentacao, configuracoes);
+    }
+
+    if (formato === "html") {
+      return gerarHtml(documentacao, configuracoes);
     }
 
     return gerarCorporativo(documentacao, configuracoes);

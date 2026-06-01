@@ -1,4 +1,4 @@
-const nomeCache = "qa-docs-studio-v10";
+const nomeCache = "qa-docs-studio-v21";
 const arquivosEssenciais = [
   "./",
   "./index.html",
@@ -18,7 +18,8 @@ const arquivosEssenciais = [
   "./assets/icons/icon.svg",
   "./vendor/alpine.min.js",
   "./vendor/html2pdf.bundle.min.js",
-  "./vendor/lucide.min.js"
+  "./vendor/lucide.min.js",
+  "./vendor/material-icons/material-icons.ttf"
 ];
 
 self.addEventListener("install", (evento) => {
