@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="description" content="QA Docs Studio: central PWA para documentacao, execucao, bugs, snippets e glossario de QA." />
+    <title>QA Docs Studio</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="vendor/html2pdf.bundle.min.js" defer></script>
+    <script src="vendor/lucide.min.js" defer></script>
+    <script src="js/armazenamentoLocal.js" defer></script>
+    <script src="js/configuracoes.js" defer></script>
+    <script src="js/documentacaoTeste.js" defer></script>
+    <script src="js/execucaoTeste.js" defer></script>
+    <script src="js/reportBug.js" defer></script>
+    <script src="js/snippetsQa.js" defer></script>
+    <script src="js/glossarioQa.js" defer></script>
+    <script src="js/importadorDados.js" defer></script>
+    <script src="js/exportadorPdf.js" defer></script>
+    <script src="js/atalhosTeclado.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="vendor/alpine.min.js" defer></script>
+  </head>
+  <body x-cloak x-data="qaDocsStudio()" x-init="iniciarAplicacao()" :class="{ 'tema-escuro': configuracoes.tema === 'escuro' }">
+    <div class="aplicacao">
+      <aside class="barra-lateral" :class="{ aberta: menuAberto }">
+        <div class="marca">
+          <img src="assets/icons/icon.svg" alt="" class="marca__icone" />
+          <div>
+            <strong>QA Docs Studio</strong>
+            <span>Produtividade para QA</span>
+          </div>
+        </div>
+
+        <nav class="navegacao" aria-label="Navegacao principal">
+          <template x-for="tela in telas" :key="tela.identificador">
+            <button type="button" class="navegacao__botao" :class="{ ativo: telaAtual === tela.identificador }" @click="trocarTela(tela.identificador)">
+              <i :data-lucide="tela.icone"></i>
+              <span x-text="tela.nome"></span>
+            </button>
+          </template>
+        </nav>
+      </aside>
+
+      <main class="conteudo">
+        <header class="topo">
+          <button type="button" class="botao-icone" @click="menuAberto = !menuAberto" title="Abrir menu">
+            <i data-lucide="menu"></i>
+          </button>
+          <div>
+            <p class="rotulo">Central pessoal de documentacao</p>
+            <h1 x-text="tituloTela"></h1>
+          </div>
+          <div class="topo__acoes">
+            <button type="button" class="botao-secundario" @click="alternarTema()" title="Alternar tema">
+              <i data-lucide="moon-star"></i>
+              <span>Tema</span>
+            </button>
+            <button type="button" class="botao-primario" @click="salvarRascunho()" title="Salvar rascunho">
+              <i data-lucide="save"></i>
+              <span>Salvar</span>
+            </button>
+          </div>
+        </header>
+
+        <section x-show="telaAtual === 'dashboard'" class="painel">
+          <section class="painel-destaque">
+            <div>
+              <span class="badge badge--tecnico">MVP PWA</span>
+              <h2>Documentacao de QA sem friccao</h2>
+              <p>Escolha presets, registre evidencias, gere textos profissionais e mantenha sua base local pronta para o proximo ciclo de testes.</p>
+            </div>
+            <div class="painel-destaque__acoes">
+              <button type="button" class="botao-destaque" @click="trocarTela('documentacao')">
+                <i data-lucide="sparkles"></i>
+                <span>Novo documento</span>
+              </button>
+              <button type="button" class="botao-destaque botao-destaque--suave" @click="trocarTela('snippets')">
+                <i data-lucide="library"></i>
+                <span>Ver snippets</span>
+              </button>
+            </div>
+          </section>
+
+          <div class="grade-metricas">
+            <article class="cartao-metrica">
+              <span>Documentacoes</span>
+              <strong x-text="documentacoesCriadas.length"></strong>
+            </article>
+            <article class="cartao-metrica">
+              <span>Execucoes</span>
+              <strong x-text="execucoesRegistradas.length"></strong>
+            </article>
+            <article class="cartao-metrica">
+              <span>Bugs</span>
+              <strong x-text="bugsReportados.length"></strong>
+            </article>
+            <article class="cartao-metrica">
+              <span>Snippets</span>
+              <strong x-text="snippets.length"></strong>
+            </article>
+          </div>
+
+          <div class="grade-dupla">
+            <section class="bloco">
+              <div class="cabecalho-bloco">
+                <h2>Atalhos Rapidos</h2>
+              </div>
+              <div class="grade-atalhos">
+                <button type="button" class="cartao-atalho" @click="trocarTela('documentacao')">
+                  <i data-lucide="file-plus-2"></i>
+                  <span>Caso de teste</span>
+                </button>
+                <button type="button" class="cartao-atalho" @click="trocarTela('execucao')">
+                  <i data-lucide="play-circle"></i>
+                  <span>Execucao</span>
+                </button>
+                <button type="button" class="cartao-atalho" @click="trocarTela('bug')">
+                  <i data-lucide="bug"></i>
+                  <span>Report de bug</span>
+                </button>
+                <button type="button" class="cartao-atalho" @click="exportarPdf('documentacao')">
+                  <i data-lucide="file-down"></i>
+                  <span>PDF</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="bloco">
+              <div class="cabecalho-bloco">
+                <h2>Ultimos Documentos</h2>
+              </div>
+              <div class="lista-registros">
+                <template x-if="documentacoesCriadas.length === 0">
+                  <p class="texto-vazio">Nenhuma documentacao salva ainda.</p>
+                </template>
+                <template x-for="documento in ultimasDocumentacoes" :key="documento.identificador">
+                  <button type="button" class="registro" @click="abrirDocumentacao(documento)">
+                    <span>
+                      <strong x-text="documento.projeto || 'Projeto sem nome'"></strong>
+                      <small x-text="documento.funcionalidade || 'Funcionalidade nao informada'"></small>
+                    </span>
+                    <span class="badge" :class="classeStatus(documento.status)" x-text="documento.status"></span>
+                  </button>
+                </template>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section x-show="telaAtual === 'documentacao'" class="painel">
+          <form class="bloco formulario" @submit.prevent="gerarDocumentacaoFinal()">
+            <div class="cabecalho-bloco">
+              <h2>Gerador de Documentacao</h2>
+              <div class="linha-acoes">
+                <button type="button" class="botao-secundario" @click="restaurarRascunho()">Restaurar</button>
+                <button type="button" class="botao-secundario" @click="duplicarDocumentacao()">Duplicar</button>
+                <button type="button" class="botao-secundario" @click="limparFormularioDocumentacao()">Limpar</button>
+                <button type="submit" class="botao-primario">Gerar</button>
+              </div>
+            </div>
+
+            <div class="abas-formulario">
+              <template x-for="aba in abasDocumentacao" :key="aba.identificador">
+                <button type="button" class="aba-formulario" :class="{ ativa: abaDocumentacao === aba.identificador }" @click="abaDocumentacao = aba.identificador; atualizarIcones()">
+                  <i :data-lucide="aba.icone"></i>
+                  <span x-text="aba.nome"></span>
+                </button>
+              </template>
+            </div>
+
+            <div x-show="abaDocumentacao === 'identificacao'" x-transition class="secao-formulario">
+              <div class="grade-formulario">
+                <label>Projeto<input x-model="documentacao.projeto" type="text" placeholder="Portal interno" /></label>
+                <label>Modulo<input x-model="documentacao.modulo" type="text" placeholder="Autenticacao" /></label>
+                <label>Funcionalidade<input x-model="documentacao.funcionalidade" type="text" placeholder="Login" /></label>
+                <label>Historia de usuario<input x-model="documentacao.historiaUsuario" type="text" placeholder="US-123" /></label>
+              </div>
+
+              <div class="painel-opcoes">
+                <div class="grupo-opcoes">
+                  <span x-text="obterGrupoOpcoes('canal').nome"></span>
+                  <div class="lista-toggles">
+                    <template x-for="canal in obterRotulosGrupo('canal')" :key="canal">
+                      <button type="button" class="botao-toggle" :title="canal" :class="{ ativo: documentacao.canal === canal }" @click="selecionarOpcaoDocumentacao('canal', 'canal', canal)" x-text="canal"></button>
+                    </template>
+                  </div>
+                  <div class="entrada-inline">
+                    <input x-model="opcaoPersonalizada.canal" type="text" placeholder="Outro canal" />
+                    <button type="button" class="botao-secundario" @click="adicionarOpcaoGrupoConfigurado('canal', 'canal', 'canal')">Usar</button>
+                  </div>
+                </div>
+
+                <div class="grupo-opcoes">
+                  <span x-text="obterGrupoOpcoes('ambiente').nome"></span>
+                  <div class="lista-toggles">
+                    <template x-for="ambiente in obterRotulosGrupo('ambiente')" :key="ambiente">
+                      <button type="button" class="botao-toggle" :title="ambiente" :class="{ ativo: documentacao.ambiente === ambiente }" @click="selecionarOpcaoDocumentacao('ambiente', 'ambiente', ambiente)" x-text="ambiente"></button>
+                    </template>
+                  </div>
+                  <div class="entrada-inline">
+                    <input x-model="opcaoPersonalizada.ambiente" type="text" placeholder="Outro ambiente" />
+                    <button type="button" class="botao-secundario" @click="adicionarOpcaoGrupoConfigurado('ambiente', 'ambiente', 'ambiente')">Usar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div x-show="abaDocumentacao === 'planejamento'" x-transition class="secao-formulario">
+              <div class="painel-opcoes">
+                <div class="grupo-opcoes">
+                  <span x-text="obterGrupoOpcoes('prioridade').nome"></span>
+                  <div class="controle-segmentado">
+                    <template x-for="prioridade in obterRotulosGrupo('prioridade')" :key="prioridade">
+                      <button type="button" :title="prioridade" :class="{ ativo: documentacao.prioridade === prioridade }" @click="selecionarOpcaoDocumentacao('prioridade', 'prioridade', prioridade)" x-text="prioridade"></button>
+                    </template>
+                  </div>
+                </div>
+
+                <div class="grupo-opcoes">
+                  <span x-text="obterGrupoOpcoes('tiposTeste').nome"></span>
+                  <div class="lista-toggles">
+                    <template x-for="tipoTeste in obterRotulosGrupo('tiposTeste')" :key="tipoTeste">
+                      <button type="button" class="botao-chip" :title="tipoTeste" :class="{ ativo: documentacao.tiposTeste.includes(tipoTeste) }" @click="alternarTipoTeste(tipoTeste)">
+                        <i x-show="documentacao.tiposTeste.includes(tipoTeste)" data-lucide="check"></i>
+                        <span x-text="tipoTeste"></span>
+                      </button>
+                    </template>
+                  </div>
+                  <div class="entrada-inline">
+                    <input x-model="opcaoPersonalizada.tipoTeste" type="text" placeholder="Outro tipo de teste" />
+                    <button type="button" class="botao-secundario" @click="adicionarTipoTestePersonalizado()">Adicionar</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grade-formulario">
+                <label class="campo-amplo">Cenario<textarea x-model="documentacao.cenario" rows="4" placeholder="Descreva a situacao de negocio que sera validada"></textarea></label>
+                <label>Pre-condicao<textarea x-model="documentacao.preCondicao" rows="4"></textarea></label>
+                <label>Massa de dados<textarea x-model="documentacao.massaDados" rows="4"></textarea></label>
+              </div>
+            </div>
+
+            <div x-show="abaDocumentacao === 'procedimentos'" x-transition class="secao-formulario">
+              <div class="cabecalho-bloco">
+                <h3>Passos de Teste</h3>
+                <button type="button" class="botao-secundario" @click="adicionarPassoDocumentacao()">Adicionar passo</button>
+              </div>
+              <div class="tabela-responsiva">
+                <table>
+                  <thead><tr><th>Passo</th><th>Acao executada</th><th>Esperado</th><th>Obtido</th><th>Status</th><th></th></tr></thead>
+                  <tbody>
+                    <template x-for="(passo, indice) in documentacao.passos" :key="passo.identificador">
+                      <tr draggable="true" @dragstart="iniciarArrastePasso(indice)" @dragover.prevent @drop.prevent="soltarPasso(indice)" :class="{ arrastando: passoArrastadoIndice === indice }">
+                        <td><button type="button" class="botao-icone alca-arraste" title="Arrastar passo"><i data-lucide="grip-vertical"></i></button><span x-text="indice + 1"></span></td>
+                        <td><textarea x-model="passo.acaoExecutada" rows="2"></textarea></td>
+                        <td><textarea x-model="passo.resultadoEsperado" rows="2"></textarea></td>
+                        <td><textarea x-model="passo.resultadoObtido" rows="2"></textarea></td>
+                        <td><select x-model="passo.status"><template x-for="statusTeste in obterRotulosGrupo('statusTeste')" :key="statusTeste"><option :value="statusTeste" x-text="statusTeste"></option></template></select></td>
+                        <td><button type="button" class="botao-icone" @click="removerPassoDocumentacao(indice)" title="Remover passo"><i data-lucide="trash-2"></i></button></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div x-show="abaDocumentacao === 'resultado'" x-transition class="secao-formulario">
+              <div class="painel-opcoes">
+                <div class="grupo-opcoes">
+                  <span x-text="obterGrupoOpcoes('statusTeste').nome"></span>
+                  <div class="controle-segmentado controle-segmentado--status">
+                    <template x-for="statusTeste in obterRotulosGrupo('statusTeste')" :key="statusTeste">
+                      <button type="button" :title="statusTeste" :class="{ ativo: documentacao.status === statusTeste }" @click="selecionarOpcaoDocumentacao('statusTeste', 'status', statusTeste)" x-text="statusTeste"></button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+              <div class="grade-formulario">
+                <label>Resultado esperado<textarea x-model="documentacao.resultadoEsperado" rows="4"></textarea></label>
+                <label>Resultado obtido<textarea x-model="documentacao.resultadoObtido" rows="4"></textarea></label>
+                <label class="campo-amplo">Evidencias<textarea x-model="documentacao.evidencias" rows="4" placeholder="Links, prints, arquivos ou observacoes"></textarea></label>
+                <label class="campo-amplo">Observacoes<textarea x-model="documentacao.observacoes" rows="4"></textarea></label>
+              </div>
+            </div>
+          </form>
+
+          <section class="bloco">
+            <div class="cabecalho-bloco">
+              <h2>Documentacao Gerada</h2>
+              <div class="linha-acoes">
+                <select x-model="formatoSaida" @change="gerarDocumentacaoFinal(false)">
+                  <option value="corporativo">Corporativo</option>
+                  <option value="markdown">Markdown</option>
+                  <option value="jira">Jira / Zephyr</option>
+                </select>
+                <button type="button" class="botao-secundario" @click="copiarTexto(textoDocumentacaoFinal)">Copiar</button>
+                <button type="button" class="botao-primario" @click="exportarPdf('documentacao')">Exportar PDF</button>
+              </div>
+            </div>
+            <pre class="saida-texto" x-text="textoDocumentacaoFinal || 'A documentacao formatada aparecera aqui.'"></pre>
+          </section>
+        </section>
+
+        <section x-show="telaAtual === 'execucao'" class="painel">
+          <form class="bloco formulario" @submit.prevent="registrarExecucao()">
+            <div class="cabecalho-bloco">
+              <h2>Execucao de Teste</h2>
+              <button type="submit" class="botao-primario">Registrar execucao</button>
+            </div>
+            <div class="painel-opcoes">
+              <div class="grupo-opcoes">
+                <span x-text="obterGrupoOpcoes('statusTeste').nome"></span>
+                <div class="controle-segmentado controle-segmentado--status">
+                  <template x-for="statusTeste in obterRotulosGrupo('statusTeste')" :key="statusTeste">
+                    <button type="button" :class="{ ativo: valorSelecionado(execucao, 'status', statusTeste) }" @click="selecionarOpcaoExecucao('statusTeste', 'status', statusTeste)" x-text="statusTeste"></button>
+                  </template>
+                </div>
+              </div>
+              <div class="grupo-opcoes">
+                <span x-text="obterGrupoOpcoes('ambiente').nome"></span>
+                <div class="lista-toggles">
+                  <template x-for="ambiente in obterRotulosGrupo('ambiente')" :key="ambiente">
+                    <button type="button" class="botao-toggle" :class="{ ativo: valorSelecionado(execucao, 'ambiente', ambiente) }" @click="selecionarOpcaoExecucao('ambiente', 'ambiente', ambiente)" x-text="ambiente"></button>
+                  </template>
+                </div>
+                <div class="entrada-inline">
+                  <input x-model="opcaoPersonalizada.ambiente" type="text" placeholder="Outro ambiente" />
+                  <button type="button" class="botao-secundario" @click="adicionarOpcaoExecucao('ambiente', 'opcoesAmbiente')">Usar</button>
+                </div>
+              </div>
+            </div>
+            <div class="grade-formulario">
+              <label class="campo-amplo">Caso de teste<select x-model="execucao.casoTeste"><option value="">Novo caso ou selecione um salvo</option><template x-for="documento in documentacoesCriadas" :key="documento.identificador"><option :value="documento.identificador" x-text="`${documento.projeto} - ${documento.funcionalidade}`"></option></template></select></label>
+              <label>Executor<input x-model="execucao.executor" type="text" /></label>
+              <label>Versao testada<input x-model="execucao.versaoTestada" type="text" /></label>
+              <label>Data e hora<input x-model="execucao.dataHora" type="datetime-local" /></label>
+              <label class="campo-amplo">Comentarios<textarea x-model="execucao.comentarios" rows="4"></textarea></label>
+              <label class="campo-amplo">Evidencias<textarea x-model="execucao.evidencias" rows="4"></textarea></label>
+            </div>
+          </form>
+          <section class="bloco">
+            <div class="cabecalho-bloco">
+              <h2>Resumo da Execucao</h2>
+              <button type="button" class="botao-secundario" @click="copiarTexto(resumoExecucao)">Copiar</button>
+            </div>
+            <pre class="saida-texto" x-text="resumoExecucao"></pre>
+          </section>
+        </section>
+
+        <section x-show="telaAtual === 'bug'" class="painel">
+          <form class="bloco formulario" @submit.prevent="registrarBug()">
+            <div class="cabecalho-bloco">
+              <h2>Report de Bug</h2>
+              <div class="linha-acoes">
+                <button type="button" class="botao-secundario" @click="copiarTexto(textoBugReport)">Copiar</button>
+                <button type="button" class="botao-primario" @click="exportarPdf('bug')">PDF</button>
+                <button type="submit" class="botao-primario">Salvar bug</button>
+              </div>
+            </div>
+            <div class="painel-opcoes">
+              <div class="grupo-opcoes">
+                <span x-text="obterGrupoOpcoes('severidade').nome"></span>
+                <div class="controle-segmentado">
+                  <template x-for="severidade in obterRotulosGrupo('severidade')" :key="severidade">
+                    <button type="button" :class="{ ativo: valorSelecionado(bug, 'severidade', severidade) }" @click="selecionarOpcaoBug('severidade', 'severidade', severidade)" x-text="severidade"></button>
+                  </template>
+                </div>
+              </div>
+              <div class="grupo-opcoes">
+                <span x-text="obterGrupoOpcoes('prioridade').nome"></span>
+                <div class="controle-segmentado">
+                  <template x-for="prioridade in obterRotulosGrupo('prioridade')" :key="prioridade">
+                    <button type="button" :class="{ ativo: valorSelecionado(bug, 'prioridade', prioridade) }" @click="selecionarOpcaoBug('prioridade', 'prioridade', prioridade)" x-text="prioridade"></button>
+                  </template>
+                </div>
+              </div>
+              <div class="grupo-opcoes">
+                <span x-text="obterGrupoOpcoes('ambiente').nome"></span>
+                <div class="lista-toggles">
+                  <template x-for="ambiente in obterRotulosGrupo('ambiente')" :key="ambiente">
+                    <button type="button" class="botao-toggle" :class="{ ativo: valorSelecionado(bug, 'ambiente', ambiente) }" @click="selecionarOpcaoBug('ambiente', 'ambiente', ambiente)" x-text="ambiente"></button>
+                  </template>
+                </div>
+                <div class="entrada-inline">
+                  <input x-model="opcaoPersonalizada.ambiente" type="text" placeholder="Outro ambiente" />
+                  <button type="button" class="botao-secundario" @click="adicionarOpcaoBug('ambiente', 'opcoesAmbiente')">Usar</button>
+                </div>
+              </div>
+              <div class="grupo-opcoes">
+                <span x-text="obterGrupoOpcoes('dispositivo').nome"></span>
+                <div class="lista-toggles">
+                  <template x-for="dispositivo in obterRotulosGrupo('dispositivo')" :key="dispositivo">
+                    <button type="button" class="botao-toggle" :class="{ ativo: valorSelecionado(bug, 'dispositivo', dispositivo) }" @click="selecionarOpcaoBug('dispositivo', 'dispositivo', dispositivo)" x-text="dispositivo"></button>
+                  </template>
+                </div>
+                <div class="entrada-inline">
+                  <input x-model="opcaoPersonalizada.dispositivo" type="text" placeholder="Outro dispositivo" />
+                  <button type="button" class="botao-secundario" @click="adicionarOpcaoBug('dispositivo', 'opcoesDispositivo')">Usar</button>
+                </div>
+              </div>
+              <div class="grupo-opcoes">
+                <span x-text="obterGrupoOpcoes('navegador').nome"></span>
+                <div class="lista-toggles">
+                  <template x-for="navegador in obterRotulosGrupo('navegador')" :key="navegador">
+                    <button type="button" class="botao-toggle" :class="{ ativo: valorSelecionado(bug, 'navegador', navegador) }" @click="selecionarOpcaoBug('navegador', 'navegador', navegador)" x-text="navegador"></button>
+                  </template>
+                </div>
+                <div class="entrada-inline">
+                  <input x-model="opcaoPersonalizada.navegador" type="text" placeholder="Outro navegador" />
+                  <button type="button" class="botao-secundario" @click="adicionarOpcaoBug('navegador', 'opcoesNavegador')">Usar</button>
+                </div>
+              </div>
+            </div>
+            <div class="grade-formulario">
+              <label>Projeto<input x-model="bug.projeto" type="text" /></label>
+              <label>Modulo<input x-model="bug.modulo" type="text" /></label>
+              <label>Funcionalidade<input x-model="bug.funcionalidade" type="text" /></label>
+              <label class="campo-amplo">Titulo do bug<input x-model="bug.titulo" type="text" /></label>
+              <label>Versao<input x-model="bug.versao" type="text" /></label>
+              <label>Usuario utilizado<input x-model="bug.usuarioUtilizado" type="text" /></label>
+              <label>Massa de dados<textarea x-model="bug.massaDados" rows="3"></textarea></label>
+              <label>Pre-condicao<textarea x-model="bug.preCondicao" rows="3"></textarea></label>
+              <label class="campo-amplo">Passos para reproduzir<textarea x-model="bug.passosReproduzir" rows="4"></textarea></label>
+              <label>Resultado esperado<textarea x-model="bug.resultadoEsperado" rows="3"></textarea></label>
+              <label>Resultado obtido<textarea x-model="bug.resultadoObtido" rows="3"></textarea></label>
+              <label>Evidencias<textarea x-model="bug.evidencias" rows="3"></textarea></label>
+              <label>Impacto<textarea x-model="bug.impacto" rows="3"></textarea></label>
+              <label>Sugestao de correcao<textarea x-model="bug.sugestaoCorrecao" rows="3"></textarea></label>
+              <div class="grupo-opcoes campo-amplo">
+                <span x-text="obterGrupoOpcoes('statusBug').nome"></span>
+                <div class="controle-segmentado controle-segmentado--status">
+                  <template x-for="statusBug in obterRotulosGrupo('statusBug')" :key="statusBug">
+                    <button type="button" :class="{ ativo: valorSelecionado(bug, 'status', statusBug) }" @click="selecionarOpcaoBug('statusBug', 'status', statusBug)" x-text="statusBug"></button>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </form>
+          <section class="bloco">
+            <h2>Bug Report Gerado</h2>
+            <pre class="saida-texto" x-text="textoBugReport"></pre>
+          </section>
+        </section>
+
+        <section x-show="telaAtual === 'snippets'" class="painel">
+          <div class="grade-dupla">
+            <form class="bloco formulario" @submit.prevent="salvarSnippet()">
+              <div class="cabecalho-bloco"><h2>Snippet de QA</h2><button type="submit" class="botao-primario">Salvar</button></div>
+              <div class="grade-formulario grade-formulario--simples">
+                <label>Titulo<input x-model="snippetEdicao.titulo" type="text" /></label>
+                <label>Categoria<input x-model="snippetEdicao.categoria" type="text" /></label>
+                <label>Tags<input x-model="snippetEdicao.tags" type="text" placeholder="login, validacao" /></label>
+                <label>Descricao<textarea x-model="snippetEdicao.descricao" rows="3"></textarea></label>
+                <label>Texto reutilizavel<textarea x-model="snippetEdicao.texto" rows="6"></textarea></label>
+              </div>
+            </form>
+            <section class="bloco">
+              <div class="cabecalho-bloco"><h2>Biblioteca</h2><input x-model="buscaSnippet" type="search" placeholder="Buscar snippet" /></div>
+              <div class="grade-cartoes">
+                <template x-for="snippet in snippetsFiltrados" :key="snippet.identificador">
+                  <article class="cartao-lista">
+                    <strong x-text="snippet.titulo"></strong>
+                    <small x-text="snippet.categoria"></small>
+                    <p x-text="snippet.descricao"></p>
+                    <div class="linha-acoes">
+                      <button type="button" class="botao-secundario" @click="copiarTexto(snippet.texto)">Copiar</button>
+                      <button type="button" class="botao-secundario" @click="editarSnippet(snippet)">Editar</button>
+                      <button type="button" class="botao-perigo" @click="excluirSnippet(snippet.identificador)">Excluir</button>
+                    </div>
+                  </article>
+                </template>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section x-show="telaAtual === 'glossario'" class="painel">
+          <div class="grade-dupla">
+            <form class="bloco formulario" @submit.prevent="salvarTermoGlossario()">
+              <div class="cabecalho-bloco"><h2>Termo Personalizado</h2><button type="submit" class="botao-primario">Salvar termo</button></div>
+              <div class="grade-formulario grade-formulario--simples">
+                <label>Nome<input x-model="termoGlossarioEdicao.nome" type="text" /></label>
+                <label>Categoria<input x-model="termoGlossarioEdicao.categoria" type="text" /></label>
+                <label>Definicao<textarea x-model="termoGlossarioEdicao.definicao" rows="4"></textarea></label>
+                <label>Exemplo pratico<textarea x-model="termoGlossarioEdicao.exemplo" rows="4"></textarea></label>
+              </div>
+            </form>
+            <section class="bloco">
+              <div class="cabecalho-bloco"><h2>Glossario de QA</h2><input x-model="buscaGlossario" type="search" placeholder="Buscar termo" /></div>
+              <div class="grade-cartoes">
+                <template x-for="termo in glossarioFiltrado" :key="termo.identificador">
+                  <article class="cartao-lista">
+                    <span class="badge badge--tecnico" x-text="termo.categoria"></span>
+                    <strong x-text="termo.nome"></strong>
+                    <p x-text="termo.definicao"></p>
+                    <small x-text="`Exemplo: ${termo.exemplo}`"></small>
+                    <div class="linha-acoes">
+                      <button type="button" class="botao-secundario" @click="editarTermoGlossario(termo)">Editar</button>
+                      <button type="button" class="botao-perigo" @click="excluirTermoGlossario(termo.identificador)">Excluir</button>
+                    </div>
+                  </article>
+                </template>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section x-show="telaAtual === 'atalhos'" class="painel">
+          <section class="bloco">
+            <h2>Atalhos de Produtividade</h2>
+            <div class="tabela-responsiva">
+              <table>
+                <thead><tr><th>Atalho</th><th>Acao</th></tr></thead>
+                <tbody>
+                  <tr><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Salvar rascunho</td></tr>
+                  <tr><td><kbd>Ctrl</kbd> + <kbd>D</kbd></td><td>Alternar dark mode</td></tr>
+                  <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Gerar documentacao</td></tr>
+                  <tr><td><kbd>Esc</kbd></td><td>Fechar modal</td></tr>
+                  <tr><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd></td><td>Copiar documentacao final</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section x-show="telaAtual === 'configuracoes'" class="painel">
+          <form class="bloco formulario" @submit.prevent="salvarConfiguracoes()">
+            <div class="cabecalho-bloco"><h2>Configuracoes</h2><button type="submit" class="botao-primario">Salvar configuracoes</button></div>
+            <div class="grade-formulario">
+              <label>Nome do profissional<input x-model="configuracoes.nomeProfissional" type="text" /></label>
+              <label>Cargo<input x-model="configuracoes.cargo" type="text" /></label>
+              <label>Empresa ou cliente<input x-model="configuracoes.empresaCliente" type="text" /></label>
+              <label>Projeto padrao<input x-model="configuracoes.projetoPadrao" type="text" /></label>
+              <label>Ambiente padrao<input x-model="configuracoes.ambientePadrao" type="text" /></label>
+              <label>Tema<select x-model="configuracoes.tema"><option value="claro">Claro</option><option value="escuro">Escuro</option></select></label>
+              <label>Preferencia de exportacao<select x-model="configuracoes.preferenciaExportacao"><option>PDF</option><option>Markdown</option><option>Jira / Zephyr</option></select></label>
+              <label>Modelo padrao<select x-model="configuracoes.modeloPadrao"><option value="corporativo">Corporativo</option><option value="markdown">Markdown</option><option value="jira">Jira / Zephyr</option></select></label>
+              <label class="campo-amplo">Cabecalho do PDF<textarea x-model="configuracoes.cabecalhoPdf" rows="3"></textarea></label>
+              <label class="campo-amplo">Rodape do PDF<textarea x-model="configuracoes.rodapePdf" rows="3"></textarea></label>
+              <label>Logo opcional<input x-model="configuracoes.logoOpcional" type="text" placeholder="URL do logo" /></label>
+              <label class="checkbox"><input x-model="configuracoes.atalhosAtivos" type="checkbox" /> Ativar atalhos de teclado</label>
+            </div>
+            <div class="linha-acoes linha-acoes--espacada">
+              <button type="button" class="botao-secundario" @click="exportarBackup()">Exportar backup JSON</button>
+              <label class="botao-secundario botao-arquivo">Importar backup JSON<input type="file" accept="application/json" @change="importarBackup($event)" /></label>
+              <button type="button" class="botao-perigo" @click="limparDadosSalvos()">Limpar dados salvos</button>
+            </div>
+          </form>
+
+          <section class="bloco">
+            <div class="cabecalho-bloco">
+              <h2>Opcoes dos Botoes</h2>
+              <button type="button" class="botao-primario" @click="salvarConfiguracoes()">Salvar opcoes</button>
+            </div>
+            <div class="grade-opcoes-configuracao">
+              <template x-for="grupo in configuracoes.gruposOpcoes" :key="grupo.identificador">
+                <article class="cartao-configuracao">
+                  <div class="cabecalho-configuracao">
+                    <label>Nome do grupo<input x-model="grupo.nome" type="text" /></label>
+                    <div class="linha-acoes">
+                      <label class="checkbox"><input x-model="grupo.obrigatorio" type="checkbox" /> Obrigatorio</label>
+                      <label class="checkbox"><input x-model="grupo.selecaoMultipla" type="checkbox" /> Multiselect</label>
+                    </div>
+                  </div>
+                  <div class="lista-opcoes-configuracao">
+                    <template x-for="(opcao, indiceOpcao) in grupo.opcoes" :key="opcao.identificador">
+                      <div class="opcao-configuracao">
+                        <input x-model="opcao.rotulo" type="text" />
+                        <button type="button" class="botao-icone" @click="excluirOpcaoConfiguracao(grupo, indiceOpcao)" title="Excluir opcao"><i data-lucide="trash-2"></i></button>
+                      </div>
+                    </template>
+                  </div>
+                  <div class="entrada-inline">
+                    <input x-model="novaOpcaoGrupo[grupo.campo]" type="text" placeholder="Nova opcao" />
+                    <button type="button" class="botao-secundario" @click="adicionarOpcaoConfiguracao(grupo)">Adicionar</button>
+                  </div>
+                </article>
+              </template>
+            </div>
+          </section>
+
+          <section class="bloco">
+            <div class="cabecalho-bloco">
+              <h2>Importacao e Templates</h2>
+              <div class="linha-acoes">
+                <button type="button" class="botao-secundario" @click="baixarTemplate('csv')">Template CSV</button>
+                <button type="button" class="botao-secundario" @click="baixarTemplate('json')">Template JSON</button>
+                <button type="button" class="botao-primario" @click="importarDadosSelecionados()">Importar</button>
+              </div>
+            </div>
+            <div class="grade-formulario">
+              <label>Tipo de dados
+                <select x-model="tipoTemplateSelecionado">
+                  <option value="documentacoes">Documentacoes</option>
+                  <option value="execucoes">Execucoes</option>
+                  <option value="bugs">Bug reports</option>
+                  <option value="snippets">Snippets</option>
+                  <option value="glossario">Glossario</option>
+                </select>
+              </label>
+              <label class="campo-amplo area-upload" @dragover.prevent @drop.prevent="receberArquivoSolto($event)">
+                <span x-text="arquivoImportacao ? arquivoImportacao.name : 'Arraste um CSV/JSON aqui ou selecione um arquivo'"></span>
+                <input type="file" accept=".csv,application/json" @change="selecionarArquivoImportacao($event)" />
+              </label>
+            </div>
+            <template x-if="errosImportacao.length > 0">
+              <div class="alerta-validacao">
+                <strong>Erros encontrados</strong>
+                <ul>
+                  <template x-for="erro in errosImportacao" :key="erro">
+                    <li x-text="erro"></li>
+                  </template>
+                </ul>
+              </div>
+            </template>
+          </section>
+
+          <section class="bloco">
+            <div class="cabecalho-bloco">
+              <h2>Historico Local</h2>
+              <button type="button" class="botao-secundario" @click="baixarArquivo('qa-docs-studio-historico.json', JSON.stringify(historicoLocal, null, 2))">Baixar historico</button>
+            </div>
+            <div class="lista-registros lista-historico">
+              <template x-if="historicoLocal.length === 0">
+                <p class="texto-vazio">Nenhuma acao registrada ainda.</p>
+              </template>
+              <template x-for="registro in historicoLocal.slice(0, 20)" :key="registro.identificador">
+                <article class="registro-historico">
+                  <span class="badge" x-text="registro.acao"></span>
+                  <div>
+                    <strong x-text="registro.descricao"></strong>
+                    <small x-text="new Date(registro.criadoEm).toLocaleString('pt-BR')"></small>
+                  </div>
+                </article>
+              </template>
+            </div>
+          </section>
+        </section>
+
+        <div class="toast" x-show="toast.visivel" x-transition x-text="toast.mensagem"></div>
+      </main>
+    </div>
+
+    <div id="areaPdf" class="area-pdf" aria-hidden="true"></div>
+  </body>
+</html>

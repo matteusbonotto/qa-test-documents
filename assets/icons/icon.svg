@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="QA Docs Studio">
+  <rect width="512" height="512" rx="104" fill="#2563eb"/>
+  <path d="M144 120h224c17.7 0 32 14.3 32 32v208c0 17.7-14.3 32-32 32H144c-17.7 0-32-14.3-32-32V152c0-17.7 14.3-32 32-32Z" fill="#ffffff"/>
+  <path d="M168 188h176M168 244h176M168 300h88" stroke="#172033" stroke-width="28" stroke-linecap="round"/>
+  <path d="m296 316 34 34 70-84" fill="none" stroke="#16a34a" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,18 @@
+{
+  "name": "QA Docs Studio",
+  "short_name": "QA Docs",
+  "description": "PWA para documentacao, execucao e produtividade de QA.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
