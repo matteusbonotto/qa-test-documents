@@ -8,10 +8,15 @@ function qaDocsStudio() {
     opcaoPersonalizada: {
       canal: "",
       ambiente: "",
+      prioridade: "",
       tipoTeste: "",
+      statusTeste: "",
       dispositivo: "",
-      navegador: ""
+      navegador: "",
+      severidade: "",
+      statusBug: ""
     },
+    outroAtivo: {},
     abasDocumentacao: [
       { identificador: "identificacao", nome: "Identificacao", icone: "fingerprint" },
       { identificador: "planejamento", nome: "Planejamento", icone: "map" },
@@ -95,6 +100,10 @@ function qaDocsStudio() {
       return window.reportBug.gerarTexto(this.bug);
     },
 
+    get htmlMarkdownDocumentacao() {
+      return this.renderizarMarkdown(this.textoDocumentacaoFinal || "A documentacao formatada aparecera aqui.");
+    },
+
     get snippetsFiltrados() {
       const busca = this.buscaSnippet.trim().toLowerCase();
 
@@ -169,6 +178,174 @@ function qaDocsStudio() {
       return Array.isArray(valorAtual) ? valorAtual.includes(valorCampo) : valorAtual === valorCampo;
     },
 
+    escaparHtml(texto) {
+      return String(texto || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    },
+
+    aplicarMarkdownInline(texto) {
+      return this.escaparHtml(texto)
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/`(.+?)`/g, "<code>$1</code>");
+    },
+
+    renderizarMarkdown(markdown) {
+      const linhas = String(markdown || "").split("\n");
+      let html = "";
+      let listaAberta = false;
+      let tabelaAberta = false;
+
+      const fecharLista = () => {
+        if (listaAberta) {
+          html += "</ul>";
+          listaAberta = false;
+        }
+      };
+
+      const fecharTabela = () => {
+        if (tabelaAberta) {
+          html += "</tbody></table>";
+          tabelaAberta = false;
+        }
+      };
+
+      linhas.forEach((linha) => {
+        if (linha.startsWith("|") && linha.endsWith("|")) {
+          fecharLista();
+          const celulas = linha.split("|").slice(1, -1).map((celula) => celula.trim());
+          const linhaSeparadora = celulas.every((celula) => /^-+$/.test(celula.replaceAll(" ", "")));
+
+          if (linhaSeparadora) {
+            return;
+          }
+
+          if (!tabelaAberta) {
+            html += "<table><tbody>";
+            tabelaAberta = true;
+          }
+
+          html += `<tr>${celulas.map((celula) => `<td>${this.aplicarMarkdownInline(celula)}</td>`).join("")}</tr>`;
+          return;
+        }
+
+        fecharTabela();
+
+        if (linha.startsWith("# ")) {
+          fecharLista();
+          html += `<h1>${this.aplicarMarkdownInline(linha.slice(2))}</h1>`;
+          return;
+        }
+
+        if (linha.startsWith("## ")) {
+          fecharLista();
+          html += `<h2>${this.aplicarMarkdownInline(linha.slice(3))}</h2>`;
+          return;
+        }
+
+        if (linha.startsWith("- ")) {
+          if (!listaAberta) {
+            html += "<ul>";
+            listaAberta = true;
+          }
+
+          html += `<li>${this.aplicarMarkdownInline(linha.slice(2))}</li>`;
+          return;
+        }
+
+        if (!linha.trim()) {
+          fecharLista();
+          html += "<br>";
+          return;
+        }
+
+        fecharLista();
+        html += `<p>${this.aplicarMarkdownInline(linha)}</p>`;
+      });
+
+      fecharLista();
+      fecharTabela();
+      return html;
+    },
+
+    obterChaveOutro(contexto, campoGrupo) {
+      return `${contexto}:${campoGrupo}`;
+    },
+
+    alternarOutro(contexto, campoGrupo) {
+      const chaveOutro = this.obterChaveOutro(contexto, campoGrupo);
+      this.outroAtivo[chaveOutro] = !this.outroAtivo[chaveOutro];
+    },
+
+    outroEstaAtivo(contexto, campoGrupo) {
+      return Boolean(this.outroAtivo[this.obterChaveOutro(contexto, campoGrupo)]);
+    },
+
+    obterValoresSelecionados(registro, nomeCampo) {
+      const valorAtual = registro[nomeCampo];
+      return Array.isArray(valorAtual) ? valorAtual : (valorAtual ? [valorAtual] : []);
+    },
+
+    obterValoresPersonalizados(registro, campoGrupo, nomeCampo) {
+      const opcoesFixas = this.obterRotulosGrupo(campoGrupo);
+      return this.obterValoresSelecionados(registro, nomeCampo).filter((valor) => !opcoesFixas.includes(valor));
+    },
+
+    aplicarValorPersonalizado(registro, contexto, campoGrupo, nomeCampo, destino) {
+      const valorCampo = (this.opcaoPersonalizada[destino] || "").trim();
+
+      if (!valorCampo) {
+        this.exibirToast("Informe uma opcao para adicionar.");
+        return;
+      }
+
+      if (this.grupoPermiteMultiplos(campoGrupo)) {
+        const valoresAtuais = this.obterValoresSelecionados(registro, nomeCampo);
+
+        if (!valoresAtuais.includes(valorCampo)) {
+          valoresAtuais.push(valorCampo);
+        }
+
+        registro[nomeCampo] = valoresAtuais;
+      } else {
+        registro[nomeCampo] = valorCampo;
+        this.outroAtivo[this.obterChaveOutro(contexto, campoGrupo)] = false;
+      }
+
+      if (contexto === "documentacao" && nomeCampo === "tiposTeste") {
+        this.sincronizarTiposTeste();
+      }
+
+      this.opcaoPersonalizada[destino] = "";
+      this.gerarDocumentacaoFinal(false);
+      this.atualizarIcones();
+    },
+
+    removerValorPersonalizado(registro, campoGrupo, nomeCampo, valorCampo) {
+      if (this.grupoPermiteMultiplos(campoGrupo)) {
+        const valoresAtualizados = this.obterValoresSelecionados(registro, nomeCampo).filter((valor) => valor !== valorCampo);
+
+        if (valoresAtualizados.length === 0 && this.grupoObrigatorio(campoGrupo)) {
+          const primeiraOpcao = this.obterRotulosGrupo(campoGrupo)[0];
+          registro[nomeCampo] = primeiraOpcao ? [primeiraOpcao] : [];
+        } else {
+          registro[nomeCampo] = valoresAtualizados;
+        }
+      } else if (registro[nomeCampo] === valorCampo) {
+        registro[nomeCampo] = this.grupoObrigatorio(campoGrupo) ? (this.obterRotulosGrupo(campoGrupo)[0] || "") : "";
+      }
+
+      if (nomeCampo === "tiposTeste") {
+        this.sincronizarTiposTeste();
+      }
+
+      this.gerarDocumentacaoFinal(false);
+      this.atualizarIcones();
+    },
+
     registrarHistorico(acao, tipoRegistro, descricao, detalhes = {}) {
       const registroHistorico = {
         identificador: crypto.randomUUID(),
@@ -192,6 +369,14 @@ function qaDocsStudio() {
       this.sincronizarTiposTeste();
     },
 
+    normalizarSelecaoPorGrupo(registro, campoGrupo, nomeCampo) {
+      if (this.grupoPermiteMultiplos(campoGrupo)) {
+        registro[nomeCampo] = this.obterValoresSelecionados(registro, nomeCampo);
+      } else if (Array.isArray(registro[nomeCampo])) {
+        registro[nomeCampo] = registro[nomeCampo][0] || "";
+      }
+    },
+
     sincronizarTiposTeste() {
       this.documentacao.tipoTeste = this.documentacao.tiposTeste.join(", ");
     },
@@ -202,8 +387,10 @@ function qaDocsStudio() {
     },
 
     selecionarOpcaoDocumentacao(campoGrupo, nomeCampo, valorCampo) {
+      this.normalizarSelecaoPorGrupo(this.documentacao, campoGrupo, nomeCampo);
+
       if (this.grupoPermiteMultiplos(campoGrupo)) {
-        const valoresAtuais = Array.isArray(this.documentacao[nomeCampo]) ? this.documentacao[nomeCampo] : [];
+        const valoresAtuais = this.obterValoresSelecionados(this.documentacao, nomeCampo);
         const indiceValor = valoresAtuais.indexOf(valorCampo);
 
         if (indiceValor >= 0) {
@@ -245,21 +432,7 @@ function qaDocsStudio() {
     },
 
     adicionarOpcaoGrupoConfigurado(campoGrupo, nomeCampo, destino) {
-      const valorCampo = this.opcaoPersonalizada[destino].trim();
-      const grupo = this.obterGrupoOpcoes(campoGrupo);
-
-      if (!valorCampo || !grupo) {
-        this.exibirToast("Informe a opcao personalizada.");
-        return;
-      }
-
-      if (!grupo.opcoes.some((opcao) => opcao.rotulo.toLowerCase() === valorCampo.toLowerCase())) {
-        grupo.opcoes.push({ identificador: crypto.randomUUID(), rotulo: valorCampo });
-        this.salvarConfiguracoes();
-      }
-
-      this.selecionarOpcaoDocumentacao(campoGrupo, nomeCampo, valorCampo);
-      this.opcaoPersonalizada[destino] = "";
+      this.aplicarValorPersonalizado(this.documentacao, "documentacao", campoGrupo, nomeCampo, destino);
     },
 
     alternarTipoTeste(tipoTeste) {
@@ -395,8 +568,10 @@ function qaDocsStudio() {
     },
 
     selecionarOpcaoExecucao(campoGrupo, nomeCampo, valorCampo) {
+      this.normalizarSelecaoPorGrupo(this.execucao, campoGrupo, nomeCampo);
+
       if (this.grupoPermiteMultiplos(campoGrupo)) {
-        const valoresAtuais = Array.isArray(this.execucao[nomeCampo]) ? this.execucao[nomeCampo] : (this.execucao[nomeCampo] ? [this.execucao[nomeCampo]] : []);
+        const valoresAtuais = this.obterValoresSelecionados(this.execucao, nomeCampo);
         const indiceValor = valoresAtuais.indexOf(valorCampo);
 
         if (indiceValor >= 0) {
@@ -417,24 +592,7 @@ function qaDocsStudio() {
     },
 
     adicionarOpcaoExecucao(nomeCampo, nomeLista) {
-      const valorCampo = this.opcaoPersonalizada[nomeCampo].trim();
-      const grupo = this.obterGrupoOpcoes(nomeCampo);
-
-      if (!valorCampo) {
-        this.exibirToast("Informe a opcao personalizada.");
-        return;
-      }
-
-      if (grupo && !grupo.opcoes.some((opcao) => opcao.rotulo.toLowerCase() === valorCampo.toLowerCase())) {
-        grupo.opcoes.push({ identificador: crypto.randomUUID(), rotulo: valorCampo });
-        this.salvarConfiguracoes();
-      } else if (!this[nomeLista].includes(valorCampo)) {
-        this[nomeLista].push(valorCampo);
-      }
-
-      this.selecionarOpcaoExecucao(nomeCampo, nomeCampo, valorCampo);
-      this.opcaoPersonalizada[nomeCampo] = "";
-      this.exibirToast("Opcao aplicada a execucao.");
+      this.aplicarValorPersonalizado(this.execucao, "execucao", nomeCampo, nomeCampo, nomeCampo);
     },
 
     selecionarCampoBug(nomeCampo, valorCampo) {
@@ -442,8 +600,10 @@ function qaDocsStudio() {
     },
 
     selecionarOpcaoBug(campoGrupo, nomeCampo, valorCampo) {
+      this.normalizarSelecaoPorGrupo(this.bug, campoGrupo, nomeCampo);
+
       if (this.grupoPermiteMultiplos(campoGrupo)) {
-        const valoresAtuais = Array.isArray(this.bug[nomeCampo]) ? this.bug[nomeCampo] : (this.bug[nomeCampo] ? [this.bug[nomeCampo]] : []);
+        const valoresAtuais = this.obterValoresSelecionados(this.bug, nomeCampo);
         const indiceValor = valoresAtuais.indexOf(valorCampo);
 
         if (indiceValor >= 0) {
@@ -464,24 +624,7 @@ function qaDocsStudio() {
     },
 
     adicionarOpcaoBug(nomeCampo, nomeLista) {
-      const valorCampo = this.opcaoPersonalizada[nomeCampo].trim();
-      const grupo = this.obterGrupoOpcoes(nomeCampo);
-
-      if (!valorCampo) {
-        this.exibirToast("Informe a opcao personalizada.");
-        return;
-      }
-
-      if (grupo && !grupo.opcoes.some((opcao) => opcao.rotulo.toLowerCase() === valorCampo.toLowerCase())) {
-        grupo.opcoes.push({ identificador: crypto.randomUUID(), rotulo: valorCampo });
-        this.salvarConfiguracoes();
-      } else if (!this[nomeLista].includes(valorCampo)) {
-        this[nomeLista].push(valorCampo);
-      }
-
-      this.selecionarOpcaoBug(nomeCampo, nomeCampo, valorCampo);
-      this.opcaoPersonalizada[nomeCampo] = "";
-      this.exibirToast("Opcao aplicada ao bug report.");
+      this.aplicarValorPersonalizado(this.bug, "bug", nomeCampo, nomeCampo, nomeCampo);
     },
 
     registrarBug() {
@@ -668,9 +811,9 @@ function qaDocsStudio() {
     },
 
     async exportarPdf(tipoDocumento) {
-      const corpo = tipoDocumento === "bug" ? this.textoBugReport : this.textoDocumentacaoFinal;
       const titulo = tipoDocumento === "bug" ? "Bug Report" : "Documentacao de Teste";
       const subtitulo = tipoDocumento === "bug" ? this.bug.titulo || "Defeito registrado" : this.documentacao.funcionalidade || "Caso de teste";
+      const dados = tipoDocumento === "bug" ? this.bug : this.documentacao;
       const resumo = tipoDocumento === "bug"
         ? {
           Projeto: this.bug.projeto,
@@ -686,10 +829,11 @@ function qaDocsStudio() {
           Funcionalidade: this.documentacao.funcionalidade,
           Ambiente: this.documentacao.ambiente,
           Prioridade: this.documentacao.prioridade,
+          "Tipo de teste": this.documentacao.tiposTeste,
           Status: this.documentacao.status
         };
 
-      await window.exportadorPdf.exportar({ titulo, subtitulo, corpo, configuracoes: this.configuracoes, resumo });
+      await window.exportadorPdf.exportar({ titulo, subtitulo, configuracoes: this.configuracoes, resumo, tipoDocumento, dados });
       this.exibirToast("PDF exportado.");
     },
 

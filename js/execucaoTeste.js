@@ -1,4 +1,8 @@
 window.execucaoTeste = (() => {
+  function formatarValor(valor) {
+    return Array.isArray(valor) ? valor.join(", ") : valor;
+  }
+
   function criarExecucao(configuracoes = {}) {
     return {
       identificador: crypto.randomUUID(),
@@ -17,9 +21,9 @@ window.execucaoTeste = (() => {
     return `RESUMO DA EXECUCAO
 
 Caso de teste: ${execucao.casoTeste || "Novo caso"}
-Status: ${execucao.status}
+Status: ${formatarValor(execucao.status) || "-"}
 Executor: ${execucao.executor || "-"}
-Ambiente: ${execucao.ambiente || "-"}
+Ambiente: ${formatarValor(execucao.ambiente) || "-"}
 Versao testada: ${execucao.versaoTestada || "-"}
 Data e hora: ${execucao.dataHora || "-"}
 

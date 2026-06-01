@@ -185,12 +185,21 @@
                   <span x-text="obterGrupoOpcoes('canal').nome"></span>
                   <div class="lista-toggles">
                     <template x-for="canal in obterRotulosGrupo('canal')" :key="canal">
-                      <button type="button" class="botao-toggle" :title="canal" :class="{ ativo: documentacao.canal === canal }" @click="selecionarOpcaoDocumentacao('canal', 'canal', canal)" x-text="canal"></button>
+                      <button type="button" class="botao-toggle" :title="canal" :class="{ ativo: valorSelecionado(documentacao, 'canal', canal) }" @click="selecionarOpcaoDocumentacao('canal', 'canal', canal)" x-text="canal"></button>
                     </template>
+                    <button type="button" class="botao-toggle botao-outro" :class="{ ativo: outroEstaAtivo('documentacao', 'canal') }" @click="alternarOutro('documentacao', 'canal')">Outro</button>
                   </div>
-                  <div class="entrada-inline">
+                  <div class="entrada-inline" x-show="outroEstaAtivo('documentacao', 'canal')" x-transition>
                     <input x-model="opcaoPersonalizada.canal" type="text" placeholder="Outro canal" />
                     <button type="button" class="botao-secundario" @click="adicionarOpcaoGrupoConfigurado('canal', 'canal', 'canal')">Usar</button>
+                  </div>
+                  <div class="lista-toggles" x-show="obterValoresPersonalizados(documentacao, 'canal', 'canal').length > 0">
+                    <template x-for="valor in obterValoresPersonalizados(documentacao, 'canal', 'canal')" :key="valor">
+                      <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(documentacao, 'canal', 'canal', valor)">
+                        <span x-text="valor"></span>
+                        <i data-lucide="x"></i>
+                      </button>
+                    </template>
                   </div>
                 </div>
 
@@ -198,12 +207,21 @@
                   <span x-text="obterGrupoOpcoes('ambiente').nome"></span>
                   <div class="lista-toggles">
                     <template x-for="ambiente in obterRotulosGrupo('ambiente')" :key="ambiente">
-                      <button type="button" class="botao-toggle" :title="ambiente" :class="{ ativo: documentacao.ambiente === ambiente }" @click="selecionarOpcaoDocumentacao('ambiente', 'ambiente', ambiente)" x-text="ambiente"></button>
+                      <button type="button" class="botao-toggle" :title="ambiente" :class="{ ativo: valorSelecionado(documentacao, 'ambiente', ambiente) }" @click="selecionarOpcaoDocumentacao('ambiente', 'ambiente', ambiente)" x-text="ambiente"></button>
                     </template>
+                    <button type="button" class="botao-toggle botao-outro" :class="{ ativo: outroEstaAtivo('documentacao', 'ambiente') }" @click="alternarOutro('documentacao', 'ambiente')">Outro</button>
                   </div>
-                  <div class="entrada-inline">
+                  <div class="entrada-inline" x-show="outroEstaAtivo('documentacao', 'ambiente')" x-transition>
                     <input x-model="opcaoPersonalizada.ambiente" type="text" placeholder="Outro ambiente" />
                     <button type="button" class="botao-secundario" @click="adicionarOpcaoGrupoConfigurado('ambiente', 'ambiente', 'ambiente')">Usar</button>
+                  </div>
+                  <div class="lista-toggles" x-show="obterValoresPersonalizados(documentacao, 'ambiente', 'ambiente').length > 0">
+                    <template x-for="valor in obterValoresPersonalizados(documentacao, 'ambiente', 'ambiente')" :key="valor">
+                      <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(documentacao, 'ambiente', 'ambiente', valor)">
+                        <span x-text="valor"></span>
+                        <i data-lucide="x"></i>
+                      </button>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -215,7 +233,20 @@
                   <span x-text="obterGrupoOpcoes('prioridade').nome"></span>
                   <div class="controle-segmentado">
                     <template x-for="prioridade in obterRotulosGrupo('prioridade')" :key="prioridade">
-                      <button type="button" :title="prioridade" :class="{ ativo: documentacao.prioridade === prioridade }" @click="selecionarOpcaoDocumentacao('prioridade', 'prioridade', prioridade)" x-text="prioridade"></button>
+                      <button type="button" :title="prioridade" :class="{ ativo: valorSelecionado(documentacao, 'prioridade', prioridade) }" @click="selecionarOpcaoDocumentacao('prioridade', 'prioridade', prioridade)" x-text="prioridade"></button>
+                    </template>
+                    <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('documentacao', 'prioridade') }" @click="alternarOutro('documentacao', 'prioridade')">Outro</button>
+                  </div>
+                  <div class="entrada-inline" x-show="outroEstaAtivo('documentacao', 'prioridade')" x-transition>
+                    <input x-model="opcaoPersonalizada.prioridade" type="text" placeholder="Outra prioridade" />
+                    <button type="button" class="botao-secundario" @click="adicionarOpcaoGrupoConfigurado('prioridade', 'prioridade', 'prioridade')">Usar</button>
+                  </div>
+                  <div class="lista-toggles" x-show="obterValoresPersonalizados(documentacao, 'prioridade', 'prioridade').length > 0">
+                    <template x-for="valor in obterValoresPersonalizados(documentacao, 'prioridade', 'prioridade')" :key="valor">
+                      <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(documentacao, 'prioridade', 'prioridade', valor)">
+                        <span x-text="valor"></span>
+                        <i data-lucide="x"></i>
+                      </button>
                     </template>
                   </div>
                 </div>
@@ -229,10 +260,19 @@
                         <span x-text="tipoTeste"></span>
                       </button>
                     </template>
+                    <button type="button" class="botao-toggle botao-outro" :class="{ ativo: outroEstaAtivo('documentacao', 'tiposTeste') }" @click="alternarOutro('documentacao', 'tiposTeste')">Outro</button>
                   </div>
-                  <div class="entrada-inline">
+                  <div class="entrada-inline" x-show="outroEstaAtivo('documentacao', 'tiposTeste')" x-transition>
                     <input x-model="opcaoPersonalizada.tipoTeste" type="text" placeholder="Outro tipo de teste" />
                     <button type="button" class="botao-secundario" @click="adicionarTipoTestePersonalizado()">Adicionar</button>
+                  </div>
+                  <div class="lista-toggles" x-show="obterValoresPersonalizados(documentacao, 'tiposTeste', 'tiposTeste').length > 0">
+                    <template x-for="valor in obterValoresPersonalizados(documentacao, 'tiposTeste', 'tiposTeste')" :key="valor">
+                      <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(documentacao, 'tiposTeste', 'tiposTeste', valor)">
+                        <span x-text="valor"></span>
+                        <i data-lucide="x"></i>
+                      </button>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -274,7 +314,20 @@
                   <span x-text="obterGrupoOpcoes('statusTeste').nome"></span>
                   <div class="controle-segmentado controle-segmentado--status">
                     <template x-for="statusTeste in obterRotulosGrupo('statusTeste')" :key="statusTeste">
-                      <button type="button" :title="statusTeste" :class="{ ativo: documentacao.status === statusTeste }" @click="selecionarOpcaoDocumentacao('statusTeste', 'status', statusTeste)" x-text="statusTeste"></button>
+                      <button type="button" :title="statusTeste" :class="{ ativo: valorSelecionado(documentacao, 'status', statusTeste) }" @click="selecionarOpcaoDocumentacao('statusTeste', 'status', statusTeste)" x-text="statusTeste"></button>
+                    </template>
+                    <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('documentacao', 'statusTeste') }" @click="alternarOutro('documentacao', 'statusTeste')">Outro</button>
+                  </div>
+                  <div class="entrada-inline" x-show="outroEstaAtivo('documentacao', 'statusTeste')" x-transition>
+                    <input x-model="opcaoPersonalizada.statusTeste" type="text" placeholder="Outro status" />
+                    <button type="button" class="botao-secundario" @click="adicionarOpcaoGrupoConfigurado('statusTeste', 'status', 'statusTeste')">Usar</button>
+                  </div>
+                  <div class="lista-toggles" x-show="obterValoresPersonalizados(documentacao, 'statusTeste', 'status').length > 0">
+                    <template x-for="valor in obterValoresPersonalizados(documentacao, 'statusTeste', 'status')" :key="valor">
+                      <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(documentacao, 'statusTeste', 'status', valor)">
+                        <span x-text="valor"></span>
+                        <i data-lucide="x"></i>
+                      </button>
                     </template>
                   </div>
                 </div>
@@ -301,7 +354,8 @@
                 <button type="button" class="botao-primario" @click="exportarPdf('documentacao')">Exportar PDF</button>
               </div>
             </div>
-            <pre class="saida-texto" x-text="textoDocumentacaoFinal || 'A documentacao formatada aparecera aqui.'"></pre>
+            <div x-show="formatoSaida === 'markdown'" class="saida-texto saida-markdown" x-html="htmlMarkdownDocumentacao"></div>
+            <pre x-show="formatoSaida !== 'markdown'" class="saida-texto" x-text="textoDocumentacaoFinal || 'A documentacao formatada aparecera aqui.'"></pre>
           </section>
         </section>
 
@@ -318,6 +372,19 @@
                   <template x-for="statusTeste in obterRotulosGrupo('statusTeste')" :key="statusTeste">
                     <button type="button" :class="{ ativo: valorSelecionado(execucao, 'status', statusTeste) }" @click="selecionarOpcaoExecucao('statusTeste', 'status', statusTeste)" x-text="statusTeste"></button>
                   </template>
+                  <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('execucao', 'statusTeste') }" @click="alternarOutro('execucao', 'statusTeste')">Outro</button>
+                </div>
+                <div class="entrada-inline" x-show="outroEstaAtivo('execucao', 'statusTeste')" x-transition>
+                  <input x-model="opcaoPersonalizada.statusTeste" type="text" placeholder="Outro status" />
+                  <button type="button" class="botao-secundario" @click="aplicarValorPersonalizado(execucao, 'execucao', 'statusTeste', 'status', 'statusTeste')">Usar</button>
+                </div>
+                <div class="lista-toggles" x-show="obterValoresPersonalizados(execucao, 'statusTeste', 'status').length > 0">
+                  <template x-for="valor in obterValoresPersonalizados(execucao, 'statusTeste', 'status')" :key="valor">
+                    <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(execucao, 'statusTeste', 'status', valor)">
+                      <span x-text="valor"></span>
+                      <i data-lucide="x"></i>
+                    </button>
+                  </template>
                 </div>
               </div>
               <div class="grupo-opcoes">
@@ -326,10 +393,19 @@
                   <template x-for="ambiente in obterRotulosGrupo('ambiente')" :key="ambiente">
                     <button type="button" class="botao-toggle" :class="{ ativo: valorSelecionado(execucao, 'ambiente', ambiente) }" @click="selecionarOpcaoExecucao('ambiente', 'ambiente', ambiente)" x-text="ambiente"></button>
                   </template>
+                  <button type="button" class="botao-toggle botao-outro" :class="{ ativo: outroEstaAtivo('execucao', 'ambiente') }" @click="alternarOutro('execucao', 'ambiente')">Outro</button>
                 </div>
-                <div class="entrada-inline">
+                <div class="entrada-inline" x-show="outroEstaAtivo('execucao', 'ambiente')" x-transition>
                   <input x-model="opcaoPersonalizada.ambiente" type="text" placeholder="Outro ambiente" />
                   <button type="button" class="botao-secundario" @click="adicionarOpcaoExecucao('ambiente', 'opcoesAmbiente')">Usar</button>
+                </div>
+                <div class="lista-toggles" x-show="obterValoresPersonalizados(execucao, 'ambiente', 'ambiente').length > 0">
+                  <template x-for="valor in obterValoresPersonalizados(execucao, 'ambiente', 'ambiente')" :key="valor">
+                    <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(execucao, 'ambiente', 'ambiente', valor)">
+                      <span x-text="valor"></span>
+                      <i data-lucide="x"></i>
+                    </button>
+                  </template>
                 </div>
               </div>
             </div>
@@ -368,6 +444,19 @@
                   <template x-for="severidade in obterRotulosGrupo('severidade')" :key="severidade">
                     <button type="button" :class="{ ativo: valorSelecionado(bug, 'severidade', severidade) }" @click="selecionarOpcaoBug('severidade', 'severidade', severidade)" x-text="severidade"></button>
                   </template>
+                  <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('bug', 'severidade') }" @click="alternarOutro('bug', 'severidade')">Outro</button>
+                </div>
+                <div class="entrada-inline" x-show="outroEstaAtivo('bug', 'severidade')" x-transition>
+                  <input x-model="opcaoPersonalizada.severidade" type="text" placeholder="Outra severidade" />
+                  <button type="button" class="botao-secundario" @click="aplicarValorPersonalizado(bug, 'bug', 'severidade', 'severidade', 'severidade')">Usar</button>
+                </div>
+                <div class="lista-toggles" x-show="obterValoresPersonalizados(bug, 'severidade', 'severidade').length > 0">
+                  <template x-for="valor in obterValoresPersonalizados(bug, 'severidade', 'severidade')" :key="valor">
+                    <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'severidade', 'severidade', valor)">
+                      <span x-text="valor"></span>
+                      <i data-lucide="x"></i>
+                    </button>
+                  </template>
                 </div>
               </div>
               <div class="grupo-opcoes">
@@ -375,6 +464,19 @@
                 <div class="controle-segmentado">
                   <template x-for="prioridade in obterRotulosGrupo('prioridade')" :key="prioridade">
                     <button type="button" :class="{ ativo: valorSelecionado(bug, 'prioridade', prioridade) }" @click="selecionarOpcaoBug('prioridade', 'prioridade', prioridade)" x-text="prioridade"></button>
+                  </template>
+                  <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('bug', 'prioridade') }" @click="alternarOutro('bug', 'prioridade')">Outro</button>
+                </div>
+                <div class="entrada-inline" x-show="outroEstaAtivo('bug', 'prioridade')" x-transition>
+                  <input x-model="opcaoPersonalizada.prioridade" type="text" placeholder="Outra prioridade" />
+                  <button type="button" class="botao-secundario" @click="aplicarValorPersonalizado(bug, 'bug', 'prioridade', 'prioridade', 'prioridade')">Usar</button>
+                </div>
+                <div class="lista-toggles" x-show="obterValoresPersonalizados(bug, 'prioridade', 'prioridade').length > 0">
+                  <template x-for="valor in obterValoresPersonalizados(bug, 'prioridade', 'prioridade')" :key="valor">
+                    <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'prioridade', 'prioridade', valor)">
+                      <span x-text="valor"></span>
+                      <i data-lucide="x"></i>
+                    </button>
                   </template>
                 </div>
               </div>
@@ -384,10 +486,19 @@
                   <template x-for="ambiente in obterRotulosGrupo('ambiente')" :key="ambiente">
                     <button type="button" class="botao-toggle" :class="{ ativo: valorSelecionado(bug, 'ambiente', ambiente) }" @click="selecionarOpcaoBug('ambiente', 'ambiente', ambiente)" x-text="ambiente"></button>
                   </template>
+                  <button type="button" class="botao-toggle botao-outro" :class="{ ativo: outroEstaAtivo('bug', 'ambiente') }" @click="alternarOutro('bug', 'ambiente')">Outro</button>
                 </div>
-                <div class="entrada-inline">
+                <div class="entrada-inline" x-show="outroEstaAtivo('bug', 'ambiente')" x-transition>
                   <input x-model="opcaoPersonalizada.ambiente" type="text" placeholder="Outro ambiente" />
                   <button type="button" class="botao-secundario" @click="adicionarOpcaoBug('ambiente', 'opcoesAmbiente')">Usar</button>
+                </div>
+                <div class="lista-toggles" x-show="obterValoresPersonalizados(bug, 'ambiente', 'ambiente').length > 0">
+                  <template x-for="valor in obterValoresPersonalizados(bug, 'ambiente', 'ambiente')" :key="valor">
+                    <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'ambiente', 'ambiente', valor)">
+                      <span x-text="valor"></span>
+                      <i data-lucide="x"></i>
+                    </button>
+                  </template>
                 </div>
               </div>
               <div class="grupo-opcoes">
@@ -396,10 +507,19 @@
                   <template x-for="dispositivo in obterRotulosGrupo('dispositivo')" :key="dispositivo">
                     <button type="button" class="botao-toggle" :class="{ ativo: valorSelecionado(bug, 'dispositivo', dispositivo) }" @click="selecionarOpcaoBug('dispositivo', 'dispositivo', dispositivo)" x-text="dispositivo"></button>
                   </template>
+                  <button type="button" class="botao-toggle botao-outro" :class="{ ativo: outroEstaAtivo('bug', 'dispositivo') }" @click="alternarOutro('bug', 'dispositivo')">Outro</button>
                 </div>
-                <div class="entrada-inline">
+                <div class="entrada-inline" x-show="outroEstaAtivo('bug', 'dispositivo')" x-transition>
                   <input x-model="opcaoPersonalizada.dispositivo" type="text" placeholder="Outro dispositivo" />
                   <button type="button" class="botao-secundario" @click="adicionarOpcaoBug('dispositivo', 'opcoesDispositivo')">Usar</button>
+                </div>
+                <div class="lista-toggles" x-show="obterValoresPersonalizados(bug, 'dispositivo', 'dispositivo').length > 0">
+                  <template x-for="valor in obterValoresPersonalizados(bug, 'dispositivo', 'dispositivo')" :key="valor">
+                    <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'dispositivo', 'dispositivo', valor)">
+                      <span x-text="valor"></span>
+                      <i data-lucide="x"></i>
+                    </button>
+                  </template>
                 </div>
               </div>
               <div class="grupo-opcoes">
@@ -408,10 +528,19 @@
                   <template x-for="navegador in obterRotulosGrupo('navegador')" :key="navegador">
                     <button type="button" class="botao-toggle" :class="{ ativo: valorSelecionado(bug, 'navegador', navegador) }" @click="selecionarOpcaoBug('navegador', 'navegador', navegador)" x-text="navegador"></button>
                   </template>
+                  <button type="button" class="botao-toggle botao-outro" :class="{ ativo: outroEstaAtivo('bug', 'navegador') }" @click="alternarOutro('bug', 'navegador')">Outro</button>
                 </div>
-                <div class="entrada-inline">
+                <div class="entrada-inline" x-show="outroEstaAtivo('bug', 'navegador')" x-transition>
                   <input x-model="opcaoPersonalizada.navegador" type="text" placeholder="Outro navegador" />
                   <button type="button" class="botao-secundario" @click="adicionarOpcaoBug('navegador', 'opcoesNavegador')">Usar</button>
+                </div>
+                <div class="lista-toggles" x-show="obterValoresPersonalizados(bug, 'navegador', 'navegador').length > 0">
+                  <template x-for="valor in obterValoresPersonalizados(bug, 'navegador', 'navegador')" :key="valor">
+                    <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'navegador', 'navegador', valor)">
+                      <span x-text="valor"></span>
+                      <i data-lucide="x"></i>
+                    </button>
+                  </template>
                 </div>
               </div>
             </div>
@@ -435,6 +564,19 @@
                 <div class="controle-segmentado controle-segmentado--status">
                   <template x-for="statusBug in obterRotulosGrupo('statusBug')" :key="statusBug">
                     <button type="button" :class="{ ativo: valorSelecionado(bug, 'status', statusBug) }" @click="selecionarOpcaoBug('statusBug', 'status', statusBug)" x-text="statusBug"></button>
+                  </template>
+                  <button type="button" class="botao-outro" :class="{ ativo: outroEstaAtivo('bug', 'statusBug') }" @click="alternarOutro('bug', 'statusBug')">Outro</button>
+                </div>
+                <div class="entrada-inline" x-show="outroEstaAtivo('bug', 'statusBug')" x-transition>
+                  <input x-model="opcaoPersonalizada.statusBug" type="text" placeholder="Outro status" />
+                  <button type="button" class="botao-secundario" @click="aplicarValorPersonalizado(bug, 'bug', 'statusBug', 'status', 'statusBug')">Usar</button>
+                </div>
+                <div class="lista-toggles" x-show="obterValoresPersonalizados(bug, 'statusBug', 'status').length > 0">
+                  <template x-for="valor in obterValoresPersonalizados(bug, 'statusBug', 'status')" :key="valor">
+                    <button type="button" class="botao-chip ativo botao-chip--removivel" @click="removerValorPersonalizado(bug, 'statusBug', 'status', valor)">
+                      <span x-text="valor"></span>
+                      <i data-lucide="x"></i>
+                    </button>
                   </template>
                 </div>
               </div>

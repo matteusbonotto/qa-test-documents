@@ -1,4 +1,8 @@
 window.reportBug = (() => {
+  function formatarValor(valor) {
+    return Array.isArray(valor) ? valor.join(", ") : valor;
+  }
+
   function criarBug(configuracoes = {}) {
     return {
       identificador: crypto.randomUUID(),
@@ -33,15 +37,15 @@ Titulo: ${bug.titulo || "-"}
 Projeto: ${bug.projeto || "-"}
 Modulo: ${bug.modulo || "-"}
 Funcionalidade: ${bug.funcionalidade || "-"}
-Severidade: ${bug.severidade}
-Prioridade: ${bug.prioridade}
-Status: ${bug.status}
+Severidade: ${formatarValor(bug.severidade) || "-"}
+Prioridade: ${formatarValor(bug.prioridade) || "-"}
+Status: ${formatarValor(bug.status) || "-"}
 
 Ambiente
-Ambiente: ${bug.ambiente || "-"}
+Ambiente: ${formatarValor(bug.ambiente) || "-"}
 Versao: ${bug.versao || "-"}
-Dispositivo: ${bug.dispositivo || "-"}
-Navegador: ${bug.navegador || "-"}
+Dispositivo: ${formatarValor(bug.dispositivo) || "-"}
+Navegador: ${formatarValor(bug.navegador) || "-"}
 Usuario utilizado: ${bug.usuarioUtilizado || "-"}
 
 Pre-condicao
