@@ -417,6 +417,8 @@ window.exportadorPdf = (() => {
   }
 
   async function renderizarCanvas(documento) {
+    aplicarQuebrasInteligentes(documento);
+
     const larguraRenderizacao = Math.ceil(documento.getBoundingClientRect().width || larguraA4Px);
     const workerCanvas = html2pdf().set({
       html2canvas: {
@@ -440,6 +442,123 @@ window.exportadorPdf = (() => {
 
     const canvas = await workerCanvas.get("canvas");
     return normalizarCanvasExportado(canvas);
+  }
+
+  function aplicarQuebrasInteligentes(documento) {
+    removerQuebrasInteligentes(documento);
+
+    const alturaPaginaPx = obterAlturaPaginaPx(documento);
+    const seletoresEvitarQuebra = [
+      ".pdf-resumo",
+      ".pdf-perfis",
+      ".pdf-infografico",
+      ".pdf-grid-campos",
+      ".pdf-grid-dupla",
+      ".pdf-execucao-painel",
+      ".pdf-secao",
+      ".pdf-evidencias-grid",
+      ".pdf-evidencia-card",
+      ".pdf-rodape"
+    ];
+
+    for (let tentativa = 0; tentativa < 6; tentativa += 1) {
+      let inseriuQuebra = false;
+
+      documento.querySelectorAll(seletoresEvitarQuebra.join(", ")).forEach((elemento) => {
+        if (elemento.dataset.quebraInteligenteAplicada === "true") {
+          return;
+        }
+
+        const alturaElemento = elemento.getBoundingClientRect().height;
+
+        if (alturaElemento <= 0 || alturaElemento > alturaPaginaPx * 0.82) {
+          return;
+        }
+
+        const deslocamentoTopo = obterDeslocamentoTopo(documento, elemento);
+        const posicaoNaPagina = deslocamentoTopo % alturaPaginaPx;
+        const margemSeguranca = 18;
+        const cruzaPagina = posicaoNaPagina > margemSeguranca && posicaoNaPagina + alturaElemento > alturaPaginaPx - margemSeguranca;
+
+        if (!cruzaPagina) {
+          return;
+        }
+
+        inserirEspacadorAntes(elemento, alturaPaginaPx - posicaoNaPagina + 1);
+        elemento.dataset.quebraInteligenteAplicada = "true";
+        inseriuQuebra = true;
+      });
+
+      inserirQuebrasTabela(documento, alturaPaginaPx);
+
+      if (!inseriuQuebra) {
+        break;
+      }
+    }
+  }
+
+  function removerQuebrasInteligentes(documento) {
+    documento.querySelectorAll(".pdf-quebra-inteligente, .pdf-quebra-inteligente-linha").forEach((elemento) => elemento.remove());
+    documento.querySelectorAll("[data-quebra-inteligente-aplicada]").forEach((elemento) => {
+      delete elemento.dataset.quebraInteligenteAplicada;
+    });
+  }
+
+  function obterAlturaPaginaPx(documento) {
+    const larguraDocumento = Math.ceil(documento.getBoundingClientRect().width || larguraA4Px);
+    return larguraDocumento * alturaA4Mm / larguraA4Mm;
+  }
+
+  function obterDeslocamentoTopo(documento, elemento) {
+    const caixaDocumento = documento.getBoundingClientRect();
+    const caixaElemento = elemento.getBoundingClientRect();
+    return caixaElemento.top - caixaDocumento.top;
+  }
+
+  function inserirEspacadorAntes(elemento, alturaPx) {
+    const espacador = document.createElement("div");
+    espacador.className = "pdf-quebra-inteligente";
+    espacador.style.height = `${Math.max(0, Math.ceil(alturaPx))}px`;
+    espacador.style.minHeight = espacador.style.height;
+    espacador.style.gridColumn = "1 / -1";
+    espacador.style.breakAfter = "avoid";
+    elemento.parentElement.insertBefore(espacador, elemento);
+  }
+
+  function inserirQuebrasTabela(documento, alturaPaginaPx) {
+    documento.querySelectorAll(".pdf-tabela tbody tr").forEach((linha) => {
+      if (linha.dataset.quebraInteligenteAplicada === "true") {
+        return;
+      }
+
+      const alturaLinha = linha.getBoundingClientRect().height;
+
+      if (alturaLinha <= 0 || alturaLinha > alturaPaginaPx * 0.6) {
+        return;
+      }
+
+      const deslocamentoTopo = obterDeslocamentoTopo(documento, linha);
+      const posicaoNaPagina = deslocamentoTopo % alturaPaginaPx;
+      const margemSeguranca = 10;
+      const cruzaPagina = posicaoNaPagina > margemSeguranca && posicaoNaPagina + alturaLinha > alturaPaginaPx - margemSeguranca;
+
+      if (!cruzaPagina) {
+        return;
+      }
+
+      const quantidadeColunas = linha.closest("table")?.querySelectorAll("thead th").length || linha.children.length || 1;
+      const linhaEspacadora = document.createElement("tr");
+      linhaEspacadora.className = "pdf-quebra-inteligente-linha";
+      const celula = document.createElement("td");
+      celula.colSpan = quantidadeColunas;
+      celula.style.height = `${Math.max(0, Math.ceil(alturaPaginaPx - posicaoNaPagina + 1))}px`;
+      celula.style.padding = "0";
+      celula.style.border = "0";
+      celula.style.background = "#ffffff";
+      linhaEspacadora.appendChild(celula);
+      linha.parentElement.insertBefore(linhaEspacadora, linha);
+      linha.dataset.quebraInteligenteAplicada = "true";
+    });
   }
 
   function normalizarCanvasExportado(canvas) {

@@ -1,4 +1,4 @@
-const nomeCache = "qa-docs-studio-v25";
+const nomeCache = "qa-docs-studio-v26";
 const arquivosEssenciais = [
   "./",
   "./index.html",
