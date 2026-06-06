@@ -1,4 +1,8 @@
 window.exportadorPdf = (() => {
+  const larguraA4Mm = 210;
+  const alturaA4Mm = 297;
+  const larguraA4Px = Math.round(larguraA4Mm * 96 / 25.4);
+
   function formatarValor(valor) {
     if (Array.isArray(valor)) {
       return valor.filter(Boolean).join(", ");
@@ -390,35 +394,167 @@ window.exportadorPdf = (() => {
     `;
   }
 
-  async function exportar({ titulo, subtitulo, configuracoes, resumo, tipoDocumento, dados, evidencias, perfisSelecionados }) {
+  function criarAreaExportacao({ titulo, subtitulo, configuracoes, resumo, tipoDocumento, dados, evidencias, perfisSelecionados }) {
     const areaPdf = document.createElement("div");
     areaPdf.className = "area-pdf area-pdf--ativa";
+    areaPdf.style.position = "absolute";
+    areaPdf.style.left = "0";
+    areaPdf.style.top = "0";
     areaPdf.innerHTML = montarDocumentoPdf({ titulo, subtitulo, configuracoes, resumo, tipoDocumento, dados, evidencias, perfisSelecionados });
     document.body.appendChild(areaPdf);
+    return areaPdf;
+  }
 
-    const opcoesPdf = {
-      margin: 0,
-      filename: `${titulo.toLowerCase().replaceAll(" ", "-")}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
+  function montarNomeArquivo(titulo, extensao) {
+    return `${titulo.toLowerCase().replaceAll(" ", "-")}.${extensao}`;
+  }
+
+  function baixarCanvasComoPng(canvas, nomeArquivo) {
+    const linkDownload = document.createElement("a");
+    linkDownload.href = canvas.toDataURL("image/png");
+    linkDownload.download = nomeArquivo;
+    linkDownload.click();
+  }
+
+  async function renderizarCanvas(documento) {
+    const larguraRenderizacao = Math.ceil(documento.getBoundingClientRect().width || larguraA4Px);
+    const workerCanvas = html2pdf().set({
       html2canvas: {
-        scale: 2,
+        scale: 1,
         backgroundColor: "#ffffff",
         useCORS: true,
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 794
-      },
-      jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
-      pagebreak: {
-        mode: ["css", "legacy"],
-        before: [".pdf-quebra-antes"],
-        avoid: [".pdf-quebra-evitar", ".pdf-card-resumo", ".pdf-campo", ".pdf-evidencia-card", ".pdf-infografico article"]
+        x: 0,
+        y: 0,
+        width: larguraRenderizacao,
+        windowWidth: larguraRenderizacao,
+        onclone: (documentoClonado) => {
+          documentoClonado.documentElement.style.margin = "0";
+          documentoClonado.body.style.margin = "0";
+          documentoClonado.body.style.padding = "0";
+          documentoClonado.body.style.background = "#ffffff";
+        }
       }
-    };
+    }).from(documento).toCanvas();
 
-    await html2pdf().set(opcoesPdf).from(areaPdf.firstElementChild).save();
+    const canvas = await workerCanvas.get("canvas");
+    return normalizarCanvasExportado(canvas);
+  }
+
+  function normalizarCanvasExportado(canvas) {
+    const contexto = canvas.getContext("2d", { willReadFrequently: true });
+    const largura = canvas.width;
+    const altura = canvas.height;
+    const passo = Math.max(1, Math.floor(largura / 400));
+    const dados = contexto.getImageData(0, 0, largura, altura).data;
+    let primeiroX = largura;
+    let ultimoX = 0;
+
+    for (let y = 0; y < altura; y += passo) {
+      for (let x = 0; x < largura; x += passo) {
+        const indice = (y * largura + x) * 4;
+        const alpha = dados[indice + 3];
+        const pixelNaoBranco = alpha > 10 && (dados[indice] < 250 || dados[indice + 1] < 250 || dados[indice + 2] < 250);
+
+        if (pixelNaoBranco) {
+          primeiroX = Math.min(primeiroX, x);
+          ultimoX = Math.max(ultimoX, x);
+        }
+      }
+    }
+
+    if (primeiroX >= ultimoX) {
+      return canvas;
+    }
+
+    const margem = Math.max(2, passo * 2);
+    const origemX = Math.max(0, primeiroX - margem);
+    const larguraConteudo = Math.min(largura - origemX, ultimoX - origemX + margem * 2);
+
+    if (larguraConteudo >= largura * 0.9) {
+      return canvas;
+    }
+
+    const canvasNormalizado = document.createElement("canvas");
+    canvasNormalizado.width = larguraConteudo;
+    canvasNormalizado.height = altura;
+    canvasNormalizado.getContext("2d").drawImage(canvas, origemX, 0, larguraConteudo, altura, 0, 0, larguraConteudo, altura);
+    return canvasNormalizado;
+  }
+
+  async function exportar({ titulo, subtitulo, configuracoes, resumo, tipoDocumento, dados, evidencias, perfisSelecionados }) {
+    const areaPdf = criarAreaExportacao({ titulo, subtitulo, configuracoes, resumo, tipoDocumento, dados, evidencias, perfisSelecionados });
+    const canvas = await renderizarCanvas(areaPdf.firstElementChild);
+
+    const pdf = await criarPdfA4();
+    adicionarCanvasAoPdf(pdf, canvas);
+    pdf.save(montarNomeArquivo(titulo, "pdf"));
     areaPdf.remove();
   }
 
-  return { exportar };
+  async function criarPdfA4() {
+    const elementoBase = document.createElement("div");
+    elementoBase.style.width = "1px";
+    elementoBase.style.height = "1px";
+    elementoBase.style.overflow = "hidden";
+    document.body.appendChild(elementoBase);
+
+    const workerPdf = html2pdf()
+      .set({
+        margin: 0,
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true }
+      })
+      .from(elementoBase)
+      .toPdf();
+    const pdf = await workerPdf.get("pdf");
+
+    elementoBase.remove();
+    return pdf;
+  }
+
+  function adicionarCanvasAoPdf(pdf, canvas) {
+    const alturaFatiaPx = Math.floor(canvas.width * alturaA4Mm / larguraA4Mm);
+    let posicaoY = 0;
+    let indicePagina = 0;
+
+    while (posicaoY < canvas.height) {
+      const alturaFatiaAtual = Math.min(alturaFatiaPx, canvas.height - posicaoY);
+      const canvasPagina = document.createElement("canvas");
+      canvasPagina.width = canvas.width;
+      canvasPagina.height = alturaFatiaAtual;
+      canvasPagina.getContext("2d").drawImage(
+        canvas,
+        0,
+        posicaoY,
+        canvas.width,
+        alturaFatiaAtual,
+        0,
+        0,
+        canvas.width,
+        alturaFatiaAtual
+      );
+
+      if (indicePagina > 0) {
+        pdf.addPage("a4", "portrait");
+      } else {
+        pdf.setPage(1);
+      }
+
+      const alturaImagemMm = alturaFatiaAtual * larguraA4Mm / canvas.width;
+      pdf.addImage(canvasPagina.toDataURL("image/jpeg", 0.98), "JPEG", 0, 0, larguraA4Mm, alturaImagemMm);
+      posicaoY += alturaFatiaAtual;
+      indicePagina += 1;
+    }
+  }
+
+  async function exportarPng({ titulo, subtitulo, configuracoes, resumo, tipoDocumento, dados, evidencias, perfisSelecionados }) {
+    const areaPdf = criarAreaExportacao({ titulo, subtitulo, configuracoes, resumo, tipoDocumento, dados, evidencias, perfisSelecionados });
+    const canvas = await renderizarCanvas(areaPdf.firstElementChild);
+
+    baixarCanvasComoPng(canvas, montarNomeArquivo(titulo, "png"));
+    areaPdf.remove();
+  }
+
+  return { exportar, exportarPng };
 })();

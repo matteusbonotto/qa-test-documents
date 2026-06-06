@@ -1329,36 +1329,50 @@ kbd {
   display: none;
 }
 
+@page {
+  size: A4;
+  margin: 0;
+}
+
 .area-pdf--ativa {
   display: block;
   position: fixed;
   left: 0;
   top: 0;
   z-index: 9999;
-  width: 794px;
+  width: 210mm;
   background: #ffffff;
   color: #172033;
   pointer-events: none;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .documento-pdf {
-  width: 794px;
-  min-height: 1123px;
+  width: 210mm;
+  max-width: 210mm;
+  min-height: 297mm;
+  margin: 0;
   padding: 0;
-  overflow: visible;
+  overflow: hidden;
   color: #172033;
   background: #f7f9fc;
   font-family: Arial, Helvetica, sans-serif;
   line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.documento-pdf,
+.documento-pdf * {
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .pdf-capa {
   position: relative;
   display: grid;
-  gap: 26px;
-  min-height: 318px;
-  padding: 34px;
+  gap: 7mm;
+  min-height: 84mm;
+  padding: 9mm;
   overflow: hidden;
   color: #ffffff;
   background:
@@ -1417,10 +1431,10 @@ kbd {
 .pdf-capa::after {
   content: "";
   position: absolute;
-  right: -90px;
-  bottom: -110px;
-  width: 280px;
-  height: 280px;
+  right: -24mm;
+  bottom: -29mm;
+  width: 74mm;
+  height: 74mm;
   background: rgba(20, 184, 166, 0.28);
   border-radius: 50%;
 }
@@ -1436,7 +1450,8 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 4mm;
+  min-width: 0;
 }
 
 .pdf-capa__marca {
@@ -1445,11 +1460,12 @@ kbd {
 
 .pdf-logo,
 .pdf-logo-fallback {
-  width: 54px;
-  height: 54px;
+  width: 14mm;
+  height: 14mm;
   object-fit: contain;
-  border-radius: 14px;
+  border-radius: 3.5mm;
   background: #ffffff;
+  flex: 0 0 auto;
 }
 
 .pdf-logo-fallback {
@@ -1463,7 +1479,7 @@ kbd {
 .pdf-capa__rodape span {
   display: block;
   color: rgba(255, 255, 255, 0.72);
-  font-size: 11px;
+  font-size: 2.9mm;
   text-transform: uppercase;
 }
 
@@ -1475,20 +1491,21 @@ kbd {
 
 .pdf-capa__marca strong {
   display: block;
-  font-size: 18px;
+  font-size: 4.8mm;
 }
 
 .pdf-capa__conteudo {
   position: relative;
   z-index: 1;
-  max-width: 620px;
+  max-width: 164mm;
 }
 
 .pdf-capa h1 {
-  margin: 12px 0 8px;
+  margin: 3mm 0 2mm;
   color: #ffffff;
-  font-size: 34px;
+  font-size: 9mm;
   line-height: 1.08;
+  overflow-wrap: anywhere;
 }
 
 .documento-pdf--execucao-bloqueado .pdf-capa h1 {
@@ -1496,19 +1513,20 @@ kbd {
 }
 
 .pdf-capa p {
-  margin: 0 0 14px;
+  margin: 0 0 3.5mm;
   color: rgba(255, 255, 255, 0.82);
-  font-size: 15px;
+  font-size: 4mm;
+  overflow-wrap: anywhere;
 }
 
 .pdf-etiqueta,
 .pdf-status {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
-  padding: 6px 10px;
+  min-height: 7.4mm;
+  padding: 1.6mm 2.6mm;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 2.9mm;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -1547,10 +1565,10 @@ kbd {
 .pdf-sinalizador-execucao {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 2.6mm;
   width: fit-content;
-  min-height: 46px;
-  padding: 8px 14px 8px 8px;
+  min-height: 12mm;
+  padding: 2mm 3.5mm 2mm 2mm;
   color: #172033;
   background: #ffffff;
   border-radius: 999px;
@@ -1560,17 +1578,17 @@ kbd {
 .pdf-sinalizador-execucao span {
   display: inline-grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 8.5mm;
+  height: 8.5mm;
   color: #ffffff;
   background: #2563eb;
   border-radius: 999px;
-  font-size: 20px;
+  font-size: 5.2mm;
   font-weight: 900;
 }
 
 .pdf-sinalizador-execucao strong {
-  font-size: 13px;
+  font-size: 3.4mm;
 }
 
 .pdf-sinalizador-execucao--sucesso span {
@@ -1601,41 +1619,42 @@ kbd {
 .pdf-capa__rodape {
   display: grid;
   grid-template-columns: 1fr 1fr 1.2fr;
-  padding-top: 18px;
+  padding-top: 4.8mm;
   border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .pdf-capa__rodape strong {
   display: block;
-  margin-top: 3px;
-  font-size: 12px;
+  margin-top: 0.8mm;
+  font-size: 3.2mm;
+  overflow-wrap: anywhere;
 }
 
 .pdf-corpo {
   display: grid;
-  gap: 18px;
-  padding: 24px 34px 0;
+  gap: 4.8mm;
+  padding: 6.4mm 9mm 0;
 }
 
 .pdf-resumo,
 .pdf-conteudo,
 .pdf-secao {
-  padding: 18px;
+  padding: 4.8mm;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  border-radius: 3.2mm;
 }
 
 .pdf-titulo-secao {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 2.6mm;
+  margin-bottom: 3.7mm;
 }
 
 .pdf-titulo-secao span {
-  width: 6px;
-  height: 28px;
+  width: 1.6mm;
+  height: 7.4mm;
   background: linear-gradient(180deg, #2563eb, #0f766e);
   border-radius: 999px;
 }
@@ -1644,37 +1663,40 @@ kbd {
 .pdf-secao h2 {
   margin: 0;
   color: #172033;
-  font-size: 17px;
+  font-size: 4.5mm;
+  overflow-wrap: anywhere;
 }
 
 .pdf-resumo-grid,
 .pdf-grid-campos {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 2.6mm;
+  min-width: 0;
 }
 
 .pdf-perfis {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 3.2mm;
+  min-width: 0;
 }
 
 .pdf-perfis article {
   display: grid;
-  grid-template-columns: 52px 1fr;
-  gap: 12px;
+  grid-template-columns: 13.8mm minmax(0, 1fr);
+  gap: 3.2mm;
   align-items: center;
   min-width: 0;
-  padding: 14px;
+  padding: 3.7mm;
   background: #ffffff;
   border: 1px solid #dbe3ef;
-  border-radius: 12px;
+  border-radius: 3.2mm;
 }
 
 .pdf-perfil-avatar {
-  width: 52px;
-  height: 52px;
+  width: 13.8mm;
+  height: 13.8mm;
   object-fit: cover;
   border-radius: 50%;
 }
@@ -1685,7 +1707,7 @@ kbd {
   justify-content: center;
   color: #ffffff;
   background: linear-gradient(135deg, #2563eb, #0f766e);
-  font-size: 14px;
+  font-size: 3.7mm;
   font-weight: 900;
 }
 
@@ -1693,30 +1715,31 @@ kbd {
 .pdf-perfis p {
   margin: 0;
   color: #64748b;
-  font-size: 10px;
+  font-size: 2.6mm;
 }
 
 .pdf-perfis strong {
   display: block;
   overflow-wrap: anywhere;
   color: #172033;
-  font-size: 13px;
+  font-size: 3.4mm;
 }
 
 .pdf-card-resumo,
 .pdf-campo {
-  padding: 12px;
+  min-width: 0;
+  padding: 3.2mm;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 3.2mm;
 }
 
 .pdf-card-resumo span,
 .pdf-campo span {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 1.3mm;
   color: #64748b;
-  font-size: 10px;
+  font-size: 2.6mm;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -1725,22 +1748,24 @@ kbd {
 .pdf-campo strong {
   display: block;
   color: #172033;
-  font-size: 12px;
+  font-size: 3.2mm;
   overflow-wrap: anywhere;
 }
 
 .pdf-infografico {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 2.6mm;
+  min-width: 0;
 }
 
 .pdf-infografico article {
-  min-height: 112px;
-  padding: 14px;
+  min-height: 29mm;
+  padding: 3.7mm;
   color: #ffffff;
   background: linear-gradient(145deg, #1d4ed8, #0f766e);
-  border-radius: 14px;
+  border-radius: 3.2mm;
+  overflow: hidden;
 }
 
 .documento-pdf--bug .pdf-infografico article {
@@ -1754,45 +1779,48 @@ kbd {
 .pdf-execucao-painel {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 2.6mm;
+  min-width: 0;
 }
 
 .pdf-execucao-painel article {
-  padding: 16px;
+  min-width: 0;
+  padding: 4.2mm;
   color: #ffffff;
   background: #0f766e;
-  border-radius: 14px;
+  border-radius: 3.2mm;
 }
 
 .pdf-execucao-painel span {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 2mm;
   color: rgba(255, 255, 255, 0.72);
-  font-size: 10px;
+  font-size: 2.6mm;
   text-transform: uppercase;
 }
 
 .pdf-execucao-painel strong {
-  font-size: 14px;
+  font-size: 3.7mm;
+  overflow-wrap: anywhere;
 }
 
 .pdf-evidencias-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 2.6mm;
 }
 
 .pdf-evidencia-card {
   display: grid;
-  gap: 8px;
-  padding: 12px;
+  gap: 2mm;
+  padding: 3.2mm;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 3.2mm;
 }
 
 .pdf-evidencia-card strong {
-  font-size: 12px;
+  font-size: 3.2mm;
   overflow-wrap: anywhere;
 }
 
@@ -1800,46 +1828,47 @@ kbd {
 .pdf-evidencia-card p {
   margin: 0;
   color: #64748b;
-  font-size: 10px;
+  font-size: 2.6mm;
 }
 
 .pdf-evidencia-card img {
   width: 100%;
-  max-height: 130px;
+  max-height: 34mm;
   object-fit: contain;
   background: #ffffff;
-  border-radius: 8px;
+  border-radius: 2mm;
 }
 
 .pdf-evidencia-card a {
   color: #2563eb;
-  font-size: 11px;
+  font-size: 2.9mm;
   font-weight: 800;
 }
 
 .pdf-infografico span {
   display: inline-grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  margin-bottom: 10px;
+  width: 8mm;
+  height: 8mm;
+  margin-bottom: 2.6mm;
   color: #172033;
   background: #ffffff;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 2.9mm;
   font-weight: 900;
 }
 
 .pdf-infografico strong {
   display: block;
-  font-size: 13px;
+  font-size: 3.4mm;
+  overflow-wrap: anywhere;
 }
 
 .pdf-infografico p,
 .pdf-secao p {
-  margin: 6px 0 0;
+  margin: 1.6mm 0 0;
   color: inherit;
-  font-size: 12px;
+  font-size: 3.2mm;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -1850,13 +1879,15 @@ kbd {
 
 .pdf-conteudo {
   display: grid;
-  gap: 12px;
+  gap: 3.2mm;
+  min-width: 0;
 }
 
 .pdf-grid-dupla {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 3.2mm;
+  min-width: 0;
 }
 
 .pdf-tabela {
@@ -1864,22 +1895,33 @@ kbd {
   min-width: 0;
   border-collapse: collapse;
   table-layout: fixed;
-  font-size: 11px;
+  font-size: 2.9mm;
+}
+
+.pdf-tabela thead {
+  display: table-header-group;
+}
+
+.pdf-tabela tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .pdf-tabela th {
-  padding: 10px;
+  padding: 2.6mm;
   color: #334155;
   background: #eaf1fb;
   border-bottom: 1px solid #dbe3ef;
   text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .pdf-tabela td {
-  padding: 10px;
+  padding: 2.6mm;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: top;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .pdf-tabela tr:nth-child(even) td {
@@ -1889,12 +1931,13 @@ kbd {
 .pdf-rodape {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
-  margin: 20px 34px 0;
-  padding: 14px 0 22px;
+  gap: 5.3mm;
+  margin: 5.3mm 9mm 0;
+  padding: 3.7mm 0 5.8mm;
   color: #64748b;
   border-top: 1px solid #d9e1ee;
-  font-size: 10px;
+  font-size: 2.6mm;
+  overflow-wrap: anywhere;
 }
 
 .pdf-quebra-evitar,
@@ -1902,7 +1945,11 @@ kbd {
 .pdf-campo,
 .pdf-perfis,
 .pdf-perfis article,
-.pdf-infografico article {
+.pdf-infografico article,
+.pdf-resumo,
+.pdf-secao,
+.pdf-evidencia-card,
+.pdf-execucao-painel article {
   break-inside: avoid;
   page-break-inside: avoid;
 }

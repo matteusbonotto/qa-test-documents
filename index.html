@@ -460,6 +460,7 @@
                 </select>
                 <button type="button" class="botao-secundario" @click="copiarTexto(textoDocumentacaoFinal)">Copiar</button>
                 <button type="button" class="botao-primario" @click="exportarPdf('documentacao')">Exportar PDF</button>
+                <button type="button" class="botao-secundario" @click="exportarPng('documentacao')">Exportar PNG</button>
               </div>
             </div>
             <div class="saida-texto saida-markdown" x-html="htmlMarkdownDocumentacao"></div>
@@ -613,6 +614,7 @@
                 </select>
                 <button type="button" class="botao-secundario" @click="copiarTexto(resumoExecucao)">Copiar</button>
                 <button type="button" class="botao-primario" @click="exportarPdf('execucao')">PDF</button>
+                <button type="button" class="botao-secundario" @click="exportarPng('execucao')">PNG</button>
               </div>
             </div>
             <div class="saida-texto saida-markdown" x-html="htmlPreviaExecucao"></div>
@@ -626,6 +628,7 @@
               <div class="linha-acoes">
                 <button type="button" class="botao-secundario" @click="copiarTexto(textoBugReport)">Copiar</button>
                 <button type="button" class="botao-primario" @click="exportarPdf('bug')">PDF</button>
+                <button type="button" class="botao-secundario" @click="exportarPng('bug')">PNG</button>
                 <button type="submit" class="botao-primario">Salvar bug</button>
               </div>
             </div>
@@ -862,6 +865,7 @@
                 </select>
                 <button type="button" class="botao-secundario" @click="copiarTexto(textoBugReport)">Copiar</button>
                 <button type="button" class="botao-primario" @click="exportarPdf('bug')">PDF</button>
+                <button type="button" class="botao-secundario" @click="exportarPng('bug')">PNG</button>
               </div>
             </div>
             <div class="saida-texto saida-markdown" x-html="htmlPreviaBug"></div>

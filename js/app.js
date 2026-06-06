@@ -1322,18 +1322,8 @@ function qaDocsStudio() {
       this.exibirToast("Texto copiado.");
     },
 
-    async exportarPdf(tipoDocumento) {
+    montarDadosExportacao(tipoDocumento) {
       const contexto = tipoDocumento === "bug" ? "bug" : tipoDocumento === "execucao" ? "execucao" : "documentacao";
-
-      if (this.contextoPossuiMidia(contexto)) {
-        const desejaHtml = confirm("Existem evidencias em video/GIF. Deseja exportar um HTML interativo para assistir as midias? Clique em Cancelar para manter PDF com links de download.");
-
-        if (desejaHtml) {
-          await this.exportarHtmlComEvidencias(tipoDocumento);
-          return;
-        }
-      }
-
       const titulo = tipoDocumento === "bug" ? "Bug Report" : tipoDocumento === "execucao" ? "Execucao de Teste" : "Plano de Testes";
       const subtitulo = tipoDocumento === "bug" ? this.bug.titulo || "Defeito registrado" : tipoDocumento === "execucao" ? this.execucao.casoTeste || "Registro de execucao" : this.documentacao.funcionalidade || "Planejamento de teste";
       const dadosOriginais = tipoDocumento === "bug" ? this.bug : tipoDocumento === "execucao" ? this.execucao : this.documentacao;
@@ -1367,9 +1357,34 @@ function qaDocsStudio() {
           Status: this.documentacao.status
         };
 
-      await window.exportadorPdf.exportar({ titulo, subtitulo, configuracoes: this.configuracoes, resumo, tipoDocumento, dados, evidencias: this.evidenciaArquivos[contexto], perfisSelecionados });
-      this.baixarPartesGrandes(contexto);
+      return { titulo, subtitulo, configuracoes: this.configuracoes, resumo, tipoDocumento, dados, evidencias: this.evidenciaArquivos[contexto], perfisSelecionados, contexto };
+    },
+
+    async exportarPdf(tipoDocumento) {
+      const pacoteExportacao = this.montarDadosExportacao(tipoDocumento);
+
+      if (this.contextoPossuiMidia(pacoteExportacao.contexto)) {
+        const desejaHtml = confirm("Existem evidencias em video/GIF. Deseja exportar um HTML interativo para assistir as midias? Clique em Cancelar para manter PDF com links de download.");
+
+        if (desejaHtml) {
+          await this.exportarHtmlComEvidencias(tipoDocumento);
+          return;
+        }
+      }
+
+      await window.exportadorPdf.exportar(pacoteExportacao);
+      this.baixarPartesGrandes(pacoteExportacao.contexto);
+      this.registrarHistorico("exportacao", "pdf", `PDF exportado: ${pacoteExportacao.tipoDocumento}`);
       this.exibirToast("PDF exportado.");
+    },
+
+    async exportarPng(tipoDocumento) {
+      const pacoteExportacao = this.montarDadosExportacao(tipoDocumento);
+
+      await window.exportadorPdf.exportarPng(pacoteExportacao);
+      this.baixarPartesGrandes(pacoteExportacao.contexto);
+      this.registrarHistorico("exportacao", "png", `PNG exportado: ${pacoteExportacao.tipoDocumento}`);
+      this.exibirToast("PNG exportado.");
     },
 
     classeStatus(status) {
