@@ -1365,30 +1365,45 @@ kbd {
 .documento-pdf * {
   box-sizing: border-box;
   max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.documento-pdf h1,
+.documento-pdf h2,
+.documento-pdf p,
+.documento-pdf span,
+.documento-pdf strong,
+.documento-pdf a,
+.documento-pdf th,
+.documento-pdf td {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .pdf-capa {
   position: relative;
   display: grid;
-  gap: 7mm;
-  min-height: 84mm;
+  gap: 5mm;
+  min-height: 58mm;
   padding: 9mm;
   overflow: hidden;
   color: #ffffff;
   background:
-    linear-gradient(135deg, rgba(23, 32, 51, 0.98), rgba(37, 99, 235, 0.9)),
-    #172033;
+    linear-gradient(135deg, var(--pdf-header-cor-1, #172033), var(--pdf-header-cor-2, #2563eb)),
+    var(--pdf-header-cor-1, #172033);
   border-radius: 0;
   page-break-inside: avoid;
   break-inside: avoid;
 }
 
 .documento-pdf--bug .pdf-capa {
-  background: linear-gradient(135deg, #3f1822, #dc2626);
+  background: linear-gradient(135deg, var(--pdf-header-cor-1, #3f1822), var(--pdf-header-cor-2, #dc2626));
 }
 
 .documento-pdf--execucao .pdf-capa {
-  background: linear-gradient(135deg, #10302c, #0f766e);
+  background: linear-gradient(135deg, var(--pdf-header-cor-1, #10302c), var(--pdf-header-cor-2, #0f766e));
 }
 
 .documento-pdf--execucao-sucesso .pdf-capa {
@@ -1417,7 +1432,7 @@ kbd {
 }
 
 .documento-pdf--plano .pdf-capa {
-  background: linear-gradient(135deg, #172033, #2563eb);
+  background: linear-gradient(135deg, var(--pdf-header-cor-1, #172033), var(--pdf-header-cor-2, #2563eb));
 }
 
 .documento-pdf--bug .pdf-titulo-secao span {
@@ -1443,8 +1458,9 @@ kbd {
   background: rgba(255, 255, 255, 0.3);
 }
 
-.pdf-capa__marca,
-.pdf-capa__rodape {
+.pdf-capa__topo,
+.pdf-capa__qa,
+.pdf-capa__meta {
   position: relative;
   z-index: 1;
   display: flex;
@@ -1454,8 +1470,18 @@ kbd {
   min-width: 0;
 }
 
-.pdf-capa__marca {
+.pdf-capa__qa {
   justify-content: flex-start;
+}
+
+.pdf-capa__meta {
+  align-items: flex-start;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.pdf-capa__meta div {
+  min-width: 32mm;
 }
 
 .pdf-logo,
@@ -1475,23 +1501,52 @@ kbd {
   font-weight: 900;
 }
 
-.pdf-capa__marca span,
-.pdf-capa__rodape span {
+.pdf-qa-avatar {
+  width: 14mm;
+  height: 14mm;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.58);
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.pdf-qa-avatar--fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pdf-header-cor-2, #2563eb);
+  font-size: 3.4mm;
+  font-weight: 900;
+}
+
+.pdf-capa__qa span,
+.pdf-capa__qa p,
+.pdf-capa__meta span {
   display: block;
   color: rgba(255, 255, 255, 0.72);
   font-size: 2.9mm;
   text-transform: uppercase;
 }
 
-.documento-pdf--execucao-bloqueado .pdf-capa__marca span,
-.documento-pdf--execucao-bloqueado .pdf-capa__rodape span,
+.pdf-capa__qa p {
+  margin: 0;
+  text-transform: none;
+}
+
+.documento-pdf--execucao-bloqueado .pdf-capa__qa span,
+.documento-pdf--execucao-bloqueado .pdf-capa__qa p,
+.documento-pdf--execucao-bloqueado .pdf-capa__meta span,
 .documento-pdf--execucao-bloqueado .pdf-capa p {
   color: rgba(23, 32, 51, 0.72);
 }
 
-.pdf-capa__marca strong {
+.pdf-capa__qa strong,
+.pdf-capa__meta strong {
   display: block;
-  font-size: 4.8mm;
+  color: inherit;
+  font-size: 3.4mm;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .pdf-capa__conteudo {
@@ -1501,9 +1556,9 @@ kbd {
 }
 
 .pdf-capa h1 {
-  margin: 3mm 0 2mm;
+  margin: 2.4mm 0 2mm;
   color: #ffffff;
-  font-size: 9mm;
+  font-size: 7.2mm;
   line-height: 1.08;
   overflow-wrap: anywhere;
 }
@@ -1523,6 +1578,7 @@ kbd {
 .pdf-status {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   min-height: 7.4mm;
   padding: 1.6mm 2.6mm;
   border-radius: 999px;
@@ -1532,14 +1588,29 @@ kbd {
 }
 
 .pdf-etiqueta {
+  gap: 1.5mm;
   color: #dbeafe;
   background: rgba(255, 255, 255, 0.14);
 }
 
+.pdf-etiqueta b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 6mm;
+  height: 6mm;
+  padding: 0 1.2mm;
+  color: var(--pdf-header-cor-2, #2563eb);
+  background: #ffffff;
+  border-radius: 999px;
+  font-size: 2.6mm;
+}
+
 .pdf-status {
+  max-width: 100%;
   color: #172033;
   background: #e5e7eb;
   text-transform: none;
+  white-space: normal;
 }
 
 .pdf-status--sucesso {
@@ -1565,8 +1636,10 @@ kbd {
 .pdf-sinalizador-execucao {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 2.6mm;
   width: fit-content;
+  max-width: 100%;
   min-height: 12mm;
   padding: 2mm 3.5mm 2mm 2mm;
   color: #172033;
@@ -1750,30 +1823,8 @@ kbd {
   color: #172033;
   font-size: 3.2mm;
   overflow-wrap: anywhere;
-}
-
-.pdf-infografico {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2.6mm;
-  min-width: 0;
-}
-
-.pdf-infografico article {
-  min-height: 29mm;
-  padding: 3.7mm;
-  color: #ffffff;
-  background: linear-gradient(145deg, #1d4ed8, #0f766e);
-  border-radius: 3.2mm;
-  overflow: hidden;
-}
-
-.documento-pdf--bug .pdf-infografico article {
-  background: linear-gradient(145deg, #dc2626, #7f1d1d);
-}
-
-.documento-pdf--execucao .pdf-infografico article {
-  background: linear-gradient(145deg, #0f766e, #14532d);
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .pdf-execucao-painel {
@@ -1802,6 +1853,8 @@ kbd {
 .pdf-execucao-painel strong {
   font-size: 3.7mm;
   overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .pdf-evidencias-grid {
@@ -1829,6 +1882,9 @@ kbd {
   margin: 0;
   color: #64748b;
   font-size: 2.6mm;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .pdf-evidencia-card img {
@@ -1843,38 +1899,19 @@ kbd {
   color: #2563eb;
   font-size: 2.9mm;
   font-weight: 800;
-}
-
-.pdf-infografico span {
-  display: inline-grid;
-  place-items: center;
-  width: 8mm;
-  height: 8mm;
-  margin-bottom: 2.6mm;
-  color: #172033;
-  background: #ffffff;
-  border-radius: 999px;
-  font-size: 2.9mm;
-  font-weight: 900;
-}
-
-.pdf-infografico strong {
-  display: block;
-  font-size: 3.4mm;
   overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
-.pdf-infografico p,
 .pdf-secao p {
   margin: 1.6mm 0 0;
   color: inherit;
   font-size: 3.2mm;
   overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
   white-space: pre-wrap;
-}
-
-.pdf-infografico p {
-  color: rgba(255, 255, 255, 0.82);
 }
 
 .pdf-conteudo {
@@ -1914,6 +1951,9 @@ kbd {
   border-bottom: 1px solid #dbe3ef;
   text-align: left;
   overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+  white-space: normal;
 }
 
 .pdf-tabela td {
@@ -1922,6 +1962,8 @@ kbd {
   vertical-align: top;
   overflow-wrap: anywhere;
   word-break: break-word;
+  hyphens: auto;
+  white-space: normal;
 }
 
 .pdf-tabela tr:nth-child(even) td {
@@ -1938,6 +1980,8 @@ kbd {
   border-top: 1px solid #d9e1ee;
   font-size: 2.6mm;
   overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .pdf-quebra-evitar,
@@ -1945,7 +1989,6 @@ kbd {
 .pdf-campo,
 .pdf-perfis,
 .pdf-perfis article,
-.pdf-infografico article,
 .pdf-resumo,
 .pdf-secao,
 .pdf-evidencia-card,

@@ -27,11 +27,11 @@ function qaDocsStudio() {
     ],
     opcoesCanal: ["Web", "Mobile", "API", "Desktop"],
     opcoesAmbiente: ["Desenvolvimento", "Homologacao", "Staging", "Producao"],
-    opcoesPrioridade: ["Baixa", "Media", "Alta", "Critica"],
+    opcoesPrioridade: ["Urgente", "Alta", "Media", "Baixa", "Critica"],
     opcoesTipoTeste: ["Funcional", "Regressivo", "Smoke", "Exploratorio", "Integracao", "Usabilidade", "API", "Responsivo", "Seguranca"],
-    opcoesStatusTeste: ["Nao executado", "Aprovado", "Reprovado", "Bloqueado", "Em analise"],
-    opcoesStatusBug: ["Novo", "Em analise", "Corrigido", "Reteste", "Fechado"],
-    opcoesSeveridade: ["Baixa", "Media", "Alta", "Critica"],
+    opcoesStatusTeste: ["Passou", "Falhou", "Bloqueado", "Nao executado", "Em execucao", "Nao aplicavel"],
+    opcoesStatusBug: ["Novo", "Em analise", "Em correcao", "Corrigido", "Em reteste", "Fechado", "Reaberto"],
+    opcoesSeveridade: ["Critica", "Alta", "Media", "Baixa"],
     opcoesDispositivo: ["Desktop", "Notebook", "Android", "iOS", "Tablet"],
     opcoesNavegador: ["Chrome", "Edge", "Firefox", "Safari", "Mobile Web"],
     buscaSnippet: "",
@@ -115,14 +115,16 @@ function qaDocsStudio() {
     },
 
     get resumoExecucao() {
-      const textoBase = window.execucaoTeste.gerarTexto(this.execucao, this.formatoSaidaExecucao);
+      const execucaoSaida = this.prepararRegistroParaSaida("execucao");
+      const textoBase = window.execucaoTeste.gerarTexto(execucaoSaida, this.formatoSaidaExecucao);
       const campos = this.textoCamposPersonalizados("execucao");
       const perfis = this.textoPerfisSelecionados("execucao");
       return [textoBase, perfis ? `\nPerfis envolvidos\n${perfis}` : "", campos ? `\nCampos personalizados\n${campos}` : ""].filter(Boolean).join("\n");
     },
 
     get textoBugReport() {
-      const textoBase = window.reportBug.gerarSaida(this.bug, this.formatoSaidaBug);
+      const bugSaida = this.prepararRegistroParaSaida("bug");
+      const textoBase = window.reportBug.gerarSaida(bugSaida, this.formatoSaidaBug);
       const campos = this.textoCamposPersonalizados("bug");
       const perfis = this.textoPerfisSelecionados("bug");
       return [textoBase, perfis ? `\nPerfis envolvidos\n${perfis}` : "", campos ? `\nCampos personalizados\n${campos}` : ""].filter(Boolean).join("\n");
@@ -248,10 +250,10 @@ function qaDocsStudio() {
       const valor = String(rotulo || "").toLowerCase();
 
       if (valor.includes("aprovado") || valor.includes("pass") || valor.includes("corrigido") || valor.includes("fechado")) return "opcao-status--sucesso";
-      if (valor.includes("reprovado") || valor.includes("fail") || valor.includes("critica") || valor.includes("crítica")) return "opcao-status--erro";
+      if (valor.includes("reprovado") || valor.includes("falhou") || valor.includes("fail") || valor.includes("critica") || valor.includes("crítica")) return "opcao-status--erro";
       if (valor.includes("bloqueado")) return "opcao-status--bloqueado";
       if (valor.includes("pendente") || valor.includes("nao executado") || valor.includes("não executado")) return "opcao-status--pendente";
-      if (valor.includes("andamento") || valor.includes("analise") || valor.includes("análise")) return "opcao-status--andamento";
+      if (valor.includes("andamento") || valor.includes("execucao") || valor.includes("execução") || valor.includes("analise") || valor.includes("análise")) return "opcao-status--andamento";
       if (valor.includes("cancelado")) return "opcao-status--cancelado";
       return "";
     },
@@ -746,8 +748,12 @@ function qaDocsStudio() {
       const clienteProjeto = this.obterCadastroPorId("clienteProjeto", identificador);
       registro.clienteProjetoId = identificador;
 
-      if (clienteProjeto && !registro.projeto) {
-        registro.projeto = clienteProjeto.nome;
+      if (clienteProjeto) {
+        registro.projetoCliente = clienteProjeto.nome;
+
+        if (!registro.projeto) {
+          registro.projeto = clienteProjeto.nome;
+        }
       }
 
       this.gerarDocumentacaoFinal(false);
@@ -759,6 +765,74 @@ function qaDocsStudio() {
         desenvolvedor: this.obterCadastroSelecionado(contexto, "desenvolvedor"),
         clienteProjeto: this.obterCadastroSelecionado(contexto, "clienteProjeto")
       };
+    },
+
+    obterProjetoClienteFinal(contexto, registro = null, perfisSelecionados = null) {
+      const registroOrigem = registro || this.obterRegistroPorContexto(contexto);
+      const perfis = perfisSelecionados || this.montarPerfisSelecionados(contexto);
+      return String(perfis.clienteProjeto?.nome || registroOrigem.projetoCliente || registroOrigem.projeto || "").trim();
+    },
+
+    obterProjetoClienteDocumento(documento) {
+      const clienteProjeto = this.configuracoes.clientesProjetos.find((cadastro) => cadastro.identificador === documento.clienteProjetoId);
+      return String(clienteProjeto?.nome || documento.projetoCliente || documento.projeto || "").trim();
+    },
+
+    prepararRegistroParaSaida(contexto, registroOrigem = null) {
+      const registro = { ...(registroOrigem || this.obterRegistroPorContexto(contexto)) };
+      const perfisSelecionados = this.montarPerfisSelecionados(contexto);
+      const projetoClienteFinal = this.obterProjetoClienteFinal(contexto, registro, perfisSelecionados);
+
+      return {
+        ...registro,
+        projeto: projetoClienteFinal,
+        projetoCliente: projetoClienteFinal,
+        perfisSelecionados
+      };
+    },
+
+    validarRegistroParaAcao(contexto, registro = null) {
+      const registroValidado = registro || this.obterRegistroPorContexto(contexto);
+      const projetoClienteFinal = this.obterProjetoClienteFinal(contexto, registroValidado);
+      const camposAusentes = [];
+      const campoPreenchido = (valor) => String(Array.isArray(valor) ? valor.join(", ") : valor || "").trim().length > 0;
+
+      if (!projetoClienteFinal) {
+        camposAusentes.push("Projeto/Cliente em Pessoas envolvidas");
+      }
+
+      if (contexto === "documentacao") {
+        if (!campoPreenchido(registroValidado.cenario || registroValidado.objetivo)) camposAusentes.push("Objetivo/Cenario");
+        if (!campoPreenchido(registroValidado.funcionalidade || registroValidado.escopo)) camposAusentes.push("Escopo ou funcionalidade");
+        if (!campoPreenchido(registroValidado.ambiente)) camposAusentes.push("Ambiente");
+        if (!this.obterCadastroSelecionado("documentacao", "qa") && !campoPreenchido(this.configuracoes.nomeProfissional)) camposAusentes.push("QA responsavel");
+        if (!campoPreenchido(registroValidado.preCondicao || registroValidado.criteriosEntrada)) camposAusentes.push("Criterios de entrada");
+        if (!campoPreenchido(registroValidado.resultadoEsperado || registroValidado.criteriosSaida)) camposAusentes.push("Criterios de saida");
+        if (!campoPreenchido(registroValidado.tiposTeste || registroValidado.tipoTeste)) camposAusentes.push("Tipos de teste");
+      } else if (contexto === "execucao") {
+        if (!campoPreenchido(registroValidado.ambiente)) camposAusentes.push("Ambiente");
+        if (!campoPreenchido(registroValidado.executor)) camposAusentes.push("Executor");
+        if (!campoPreenchido(registroValidado.casoTeste || registroValidado.cenario)) camposAusentes.push("Cenario/Caso de teste");
+        if (!campoPreenchido(registroValidado.resultadoEsperado)) camposAusentes.push("Resultado esperado");
+        if (!campoPreenchido(registroValidado.resultadoObtido)) camposAusentes.push("Resultado obtido");
+        if (!campoPreenchido(registroValidado.status)) camposAusentes.push("Status");
+        if (!campoPreenchido(registroValidado.dataHora)) camposAusentes.push("Data de execucao");
+      } else if (contexto === "bug") {
+        if (!campoPreenchido(registroValidado.ambiente)) camposAusentes.push("Ambiente");
+        if (!campoPreenchido(registroValidado.titulo)) camposAusentes.push("Titulo");
+        if (!campoPreenchido(registroValidado.passosReproduzir)) camposAusentes.push("Passos para reproduzir");
+        if (!campoPreenchido(registroValidado.resultadoEsperado)) camposAusentes.push("Resultado esperado");
+        if (!campoPreenchido(registroValidado.resultadoObtido)) camposAusentes.push("Resultado obtido");
+        if (!campoPreenchido(registroValidado.severidade)) camposAusentes.push("Severidade");
+        if (!campoPreenchido(registroValidado.prioridade)) camposAusentes.push("Prioridade");
+      }
+
+      if (camposAusentes.length > 0) {
+        this.exibirToast(`Preencha antes de continuar: ${camposAusentes.slice(0, 3).join(", ")}${camposAusentes.length > 3 ? "..." : ""}`);
+        return false;
+      }
+
+      return true;
     },
 
     textoPerfisSelecionados(contexto) {
@@ -868,6 +942,23 @@ function qaDocsStudio() {
       this.exibirToast("Configuracoes salvas.");
     },
 
+    aplicarTemaHeaderImpressao(tipoDocumento) {
+      const temas = {
+        azul: { corPrimaria: "#172033", corSecundaria: "#2563eb" },
+        verde: { corPrimaria: "#10302c", corSecundaria: "#0f766e" },
+        vermelho: { corPrimaria: "#3f1822", corSecundaria: "#dc2626" }
+      };
+      const header = this.configuracoes.impressaoHeaders?.[tipoDocumento];
+      const tema = temas[header?.tema];
+
+      if (!header || !tema) {
+        return;
+      }
+
+      header.corPrimaria = tema.corPrimaria;
+      header.corSecundaria = tema.corSecundaria;
+    },
+
     grupoConfiguracaoAberto(campo) {
       return Boolean(this.acordeonsGrupos[campo]);
     },
@@ -915,13 +1006,18 @@ function qaDocsStudio() {
     },
 
     gerarDocumentacaoFinal(exibirMensagem = true) {
-      const textoBase = window.documentacaoTeste.gerarTexto(this.documentacao, this.configuracoes, this.formatoSaida);
+      if (exibirMensagem && !this.validarRegistroParaAcao("documentacao")) {
+        return;
+      }
+
+      const documentacaoSaida = this.prepararRegistroParaSaida("documentacao");
+      const textoBase = window.documentacaoTeste.gerarTexto(documentacaoSaida, this.configuracoes, this.formatoSaida);
       const campos = this.textoCamposPersonalizados("documentacao");
       const perfis = this.textoPerfisSelecionados("documentacao");
       this.textoDocumentacaoFinal = [textoBase, perfis ? `\nPerfis envolvidos\n${perfis}` : "", campos ? `\nCampos personalizados\n${campos}` : ""].filter(Boolean).join("\n");
 
       if (exibirMensagem) {
-        const documentoSalvo = { ...this.documentacao, identificador: this.documentacao.identificador || crypto.randomUUID(), atualizadoEm: new Date().toISOString() };
+        const documentoSalvo = { ...documentacaoSaida, identificador: this.documentacao.identificador || crypto.randomUUID(), atualizadoEm: new Date().toISOString() };
         const indiceExistente = this.documentacoesCriadas.findIndex((documento) => documento.identificador === documentoSalvo.identificador);
 
         if (indiceExistente >= 0) {
@@ -976,7 +1072,11 @@ function qaDocsStudio() {
     },
 
     registrarExecucao() {
-      const execucaoSalva = { ...this.execucao, identificador: crypto.randomUUID(), criadoEm: new Date().toISOString() };
+      if (!this.validarRegistroParaAcao("execucao")) {
+        return;
+      }
+
+      const execucaoSalva = { ...this.prepararRegistroParaSaida("execucao"), identificador: crypto.randomUUID(), criadoEm: new Date().toISOString() };
       this.execucoesRegistradas.push(execucaoSalva);
       window.armazenamentoLocal.salvar("execucoes", this.execucoesRegistradas);
       this.registrarHistorico("criacao", "execucao", `Execucao registrada: ${execucaoSalva.status}`, { identificador: execucaoSalva.identificador });
@@ -1049,7 +1149,11 @@ function qaDocsStudio() {
     },
 
     registrarBug() {
-      const bugSalvo = { ...this.bug, identificador: this.bug.identificador || crypto.randomUUID(), criadoEm: new Date().toISOString() };
+      if (!this.validarRegistroParaAcao("bug")) {
+        return;
+      }
+
+      const bugSalvo = { ...this.prepararRegistroParaSaida("bug"), identificador: this.bug.identificador || crypto.randomUUID(), criadoEm: new Date().toISOString() };
       const indiceExistente = this.bugsReportados.findIndex((bugRegistrado) => bugRegistrado.identificador === bugSalvo.identificador);
 
       if (indiceExistente >= 0) {
@@ -1261,6 +1365,22 @@ function qaDocsStudio() {
       this.registrarHistorico("exportacao", "template", `Template ${formato.toUpperCase()} baixado: ${this.tipoTemplateSelecionado}`);
     },
 
+    obterTipoDadosPorTela(contexto) {
+      const mapaTipos = {
+        documentacao: "documentacoes",
+        execucao: "execucoes",
+        bug: "bugs"
+      };
+      return mapaTipos[contexto] || "documentacoes";
+    },
+
+    baixarTemplateCsvTela(contexto) {
+      const tipoDados = this.obterTipoDadosPorTela(contexto);
+      const conteudo = window.importadorDados.gerarCsvTemplate(tipoDados);
+      this.baixarArquivo(`template-${tipoDados}.csv`, conteudo, "text/csv");
+      this.registrarHistorico("exportacao", "template", `Template CSV baixado: ${tipoDados}`);
+    },
+
     selecionarArquivoImportacao(evento) {
       this.arquivoImportacao = evento.target.files[0];
       this.errosImportacao = [];
@@ -1312,6 +1432,55 @@ function qaDocsStudio() {
       }
     },
 
+    async importarCsvTela(contexto, evento) {
+      const arquivo = evento.target.files[0];
+      evento.target.value = "";
+
+      if (!arquivo) {
+        return;
+      }
+
+      const tipoDados = this.obterTipoDadosPorTela(contexto);
+
+      try {
+        const resultado = await window.importadorDados.lerArquivo(arquivo, tipoDados);
+
+        if (resultado.erros.length > 0) {
+          this.errosImportacao = resultado.erros;
+          this.exibirToast("CSV possui erros de validacao.");
+          return;
+        }
+
+        const mapaColecoes = {
+          documentacoes: ["documentacoesCriadas", "documentacoes"],
+          execucoes: ["execucoesRegistradas", "execucoes"],
+          bugs: ["bugsReportados", "bugs"]
+        };
+        const [nomeColecao, chaveArmazenamento] = mapaColecoes[tipoDados];
+
+        this[nomeColecao] = [...this[nomeColecao], ...resultado.registros];
+        window.armazenamentoLocal.salvar(chaveArmazenamento, this[nomeColecao]);
+
+        if (resultado.registros[0]) {
+          if (contexto === "documentacao") {
+            this.documentacao = { ...window.documentacaoTeste.criarDocumentacao(this.configuracoes), ...resultado.registros[0] };
+            this.normalizarDocumentacao();
+            this.gerarDocumentacaoFinal(false);
+          } else if (contexto === "execucao") {
+            this.execucao = { ...window.execucaoTeste.criarExecucao(this.configuracoes), ...resultado.registros[0] };
+          } else {
+            this.bug = { ...window.reportBug.criarBug(this.configuracoes), ...resultado.registros[0] };
+          }
+        }
+
+        this.registrarHistorico("importacao", tipoDados, `${resultado.registros.length} registro(s) importado(s) de ${arquivo.name}`);
+        this.exibirToast("CSV importado.");
+      } catch (erro) {
+        this.errosImportacao = [`Arquivo invalido: ${erro.message}`];
+        this.exibirToast("Nao foi possivel importar o CSV.");
+      }
+    },
+
     async copiarTexto(texto) {
       if (!texto) {
         this.exibirToast("Nada para copiar.");
@@ -1326,12 +1495,11 @@ function qaDocsStudio() {
       const contexto = tipoDocumento === "bug" ? "bug" : tipoDocumento === "execucao" ? "execucao" : "documentacao";
       const titulo = tipoDocumento === "bug" ? "Bug Report" : tipoDocumento === "execucao" ? "Execucao de Teste" : "Plano de Testes";
       const subtitulo = tipoDocumento === "bug" ? this.bug.titulo || "Defeito registrado" : tipoDocumento === "execucao" ? this.execucao.casoTeste || "Registro de execucao" : this.documentacao.funcionalidade || "Planejamento de teste";
-      const dadosOriginais = tipoDocumento === "bug" ? this.bug : tipoDocumento === "execucao" ? this.execucao : this.documentacao;
-      const perfisSelecionados = this.montarPerfisSelecionados(contexto);
-      const dados = { ...dadosOriginais, camposPersonalizados: this.textoCamposPersonalizados(contexto), perfisSelecionados };
+      const dados = { ...this.prepararRegistroParaSaida(contexto), camposPersonalizados: this.textoCamposPersonalizados(contexto) };
+      const perfisSelecionados = dados.perfisSelecionados;
       const resumo = tipoDocumento === "bug"
         ? {
-          Projeto: this.bug.projeto,
+          "Projeto/Cliente": dados.projeto,
           Modulo: this.bug.modulo,
           Funcionalidade: this.bug.funcionalidade,
           Severidade: this.bug.severidade,
@@ -1340,7 +1508,7 @@ function qaDocsStudio() {
         }
         : tipoDocumento === "execucao"
           ? {
-            "Caso de teste": this.execucao.casoTeste || "Novo caso",
+            "Projeto/Cliente": dados.projeto,
             Status: this.execucao.status,
             Executor: this.execucao.executor,
             Ambiente: this.execucao.ambiente,
@@ -1348,9 +1516,8 @@ function qaDocsStudio() {
             "Data": this.execucao.dataHora
           }
           : {
-          Projeto: this.documentacao.projeto,
+          "Projeto/Cliente": dados.projeto,
           Modulo: this.documentacao.modulo,
-          Funcionalidade: this.documentacao.funcionalidade,
           Ambiente: this.documentacao.ambiente,
           Prioridade: this.documentacao.prioridade,
           "Tipo de teste": this.documentacao.tiposTeste,
@@ -1361,6 +1528,12 @@ function qaDocsStudio() {
     },
 
     async exportarPdf(tipoDocumento) {
+      const contexto = tipoDocumento === "bug" ? "bug" : tipoDocumento === "execucao" ? "execucao" : "documentacao";
+
+      if (!this.validarRegistroParaAcao(contexto)) {
+        return;
+      }
+
       const pacoteExportacao = this.montarDadosExportacao(tipoDocumento);
 
       if (this.contextoPossuiMidia(pacoteExportacao.contexto)) {
@@ -1379,6 +1552,12 @@ function qaDocsStudio() {
     },
 
     async exportarPng(tipoDocumento) {
+      const contexto = tipoDocumento === "bug" ? "bug" : tipoDocumento === "execucao" ? "execucao" : "documentacao";
+
+      if (!this.validarRegistroParaAcao(contexto)) {
+        return;
+      }
+
       const pacoteExportacao = this.montarDadosExportacao(tipoDocumento);
 
       await window.exportadorPdf.exportarPng(pacoteExportacao);
@@ -1388,15 +1567,15 @@ function qaDocsStudio() {
     },
 
     classeStatus(status) {
-      if (status === "Aprovado" || status === "Corrigido" || status === "Fechado") {
+      if (status === "Aprovado" || status === "Passou" || status === "Corrigido" || status === "Fechado") {
         return "badge--sucesso";
       }
 
-      if (status === "Reprovado" || status === "Critica") {
+      if (status === "Reprovado" || status === "Falhou" || status === "Critica") {
         return "badge--erro";
       }
 
-      if (status === "Bloqueado" || status === "Em analise") {
+      if (status === "Bloqueado" || status === "Em analise" || status === "Em execucao" || status === "Em correcao" || status === "Em reteste") {
         return "badge--alerta";
       }
 

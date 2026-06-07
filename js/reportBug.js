@@ -10,6 +10,7 @@ window.reportBug = (() => {
       qaResponsavelId: "",
       desenvolvedorId: "",
       clienteProjetoId: "",
+      projetoCliente: "",
       projeto: configuracoes.projetoPadrao || "",
       modulo: "",
       funcionalidade: "",
@@ -28,6 +29,13 @@ window.reportBug = (() => {
       resultadoObtido: "",
       evidencias: "",
       impacto: "",
+      impactoUsuario: "",
+      impactoNegocio: "",
+      frequencia: "Sempre ocorre",
+      responsavel: "",
+      dataAbertura: new Date().toISOString().slice(0, 10),
+      criterioAceiteCorrecao: "",
+      observacoesTecnicas: "",
       sugestaoCorrecao: "",
       status: "Novo"
     };
@@ -36,13 +44,17 @@ window.reportBug = (() => {
   function gerarTexto(bug) {
     return `BUG REPORT
 
+ID do bug: ${bug.identificador || "-"}
 Titulo: ${bug.titulo || "-"}
-Projeto: ${bug.projeto || "-"}
+Projeto/Cliente: ${bug.projeto || "-"}
 Modulo: ${bug.modulo || "-"}
 Funcionalidade: ${bug.funcionalidade || "-"}
 Severidade: ${formatarValor(bug.severidade) || "-"}
 Prioridade: ${formatarValor(bug.prioridade) || "-"}
+Frequencia: ${formatarValor(bug.frequencia) || "-"}
 Status: ${formatarValor(bug.status) || "-"}
+Responsavel: ${bug.responsavel || "-"}
+Data de abertura: ${bug.dataAbertura || bug.criadoEm || "-"}
 
 Ambiente
 Ambiente: ${formatarValor(bug.ambiente) || "-"}
@@ -70,7 +82,15 @@ Evidencias
 ${bug.evidencias || "-"}
 
 Impacto
-${bug.impacto || "-"}
+Usuario: ${bug.impactoUsuario || bug.impacto || "-"}
+Negocio: ${bug.impactoNegocio || "-"}
+Geral: ${bug.impacto || "-"}
+
+Criterio para aceite da correcao
+${bug.criterioAceiteCorrecao || "A correcao deve eliminar o comportamento reportado, preservar os fluxos relacionados e permitir reteste com evidencia objetiva."}
+
+Observacoes tecnicas
+${bug.observacoesTecnicas || "-"}
 
 Sugestao de correcao
 ${bug.sugestaoCorrecao || "-"}`;
@@ -79,12 +99,15 @@ ${bug.sugestaoCorrecao || "-"}`;
   function gerarMarkdown(bug) {
     return `# Bug Report
 
+- **ID:** ${bug.identificador || "-"}
 - **Titulo:** ${bug.titulo || "-"}
-- **Projeto:** ${bug.projeto || "-"}
+- **Projeto/Cliente:** ${bug.projeto || "-"}
 - **Severidade:** ${formatarValor(bug.severidade) || "-"}
 - **Prioridade:** ${formatarValor(bug.prioridade) || "-"}
+- **Frequencia:** ${formatarValor(bug.frequencia) || "-"}
 - **Status:** ${formatarValor(bug.status) || "-"}
 - **Ambiente:** ${formatarValor(bug.ambiente) || "-"}
+- **Build/versao:** ${bug.versao || "-"}
 
 ## Passos para reproduzir
 ${bug.passosReproduzir || "-"}
@@ -96,14 +119,26 @@ ${bug.resultadoEsperado || "-"}
 ${bug.resultadoObtido || "-"}
 
 ## Impacto
-${bug.impacto || "-"}`;
+### Usuario
+${bug.impactoUsuario || bug.impacto || "-"}
+
+### Negocio
+${bug.impactoNegocio || "-"}
+
+## Criterio de aceite da correcao
+${bug.criterioAceiteCorrecao || "A correcao deve eliminar o comportamento reportado, preservar os fluxos relacionados e permitir reteste com evidencia objetiva."}
+
+## Observacoes tecnicas
+${bug.observacoesTecnicas || "-"}`;
   }
 
   function gerarJira(bug) {
     return `h2. Bug Report - ${bug.titulo || "Sem titulo"}
 
+*Projeto/Cliente:* ${bug.projeto || "-"}
 *Severidade:* ${formatarValor(bug.severidade) || "-"}
 *Prioridade:* ${formatarValor(bug.prioridade) || "-"}
+*Frequencia:* ${formatarValor(bug.frequencia) || "-"}
 *Status:* ${formatarValor(bug.status) || "-"}
 
 h3. Passos para reproduzir
@@ -120,6 +155,7 @@ ${bug.resultadoObtido || "-"}`;
     return `<article>
   <h1>Bug Report</h1>
   <p><strong>Titulo:</strong> ${bug.titulo || "-"}</p>
+  <p><strong>Projeto/Cliente:</strong> ${bug.projeto || "-"}</p>
   <p><strong>Severidade:</strong> ${formatarValor(bug.severidade) || "-"}</p>
   <p><strong>Status:</strong> ${formatarValor(bug.status) || "-"}</p>
   <h2>Resultado obtido</h2>

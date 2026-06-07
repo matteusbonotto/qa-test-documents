@@ -140,7 +140,7 @@
                 <template x-for="documento in ultimasDocumentacoes" :key="documento.identificador">
                   <button type="button" class="registro" @click="abrirDocumentacao(documento)">
                     <span>
-                      <strong x-text="documento.projeto || 'Projeto sem nome'"></strong>
+                      <strong x-text="obterProjetoClienteDocumento(documento) || 'Projeto/Cliente nao informado'"></strong>
                       <small x-text="documento.funcionalidade || 'Funcionalidade nao informada'"></small>
                     </span>
                     <span class="badge" :class="classeStatus(documento.status)" x-text="documento.status"></span>
@@ -316,9 +316,20 @@
                 <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Cenario e preparacao</strong><small>Objetivo, pre-condicoes e massa de dados</small></span><span class="badge">Planejamento</span></summary>
                 <div class="acordeon-formulario__corpo">
                   <div class="grade-formulario">
-                    <label class="campo-amplo">Cenario<textarea x-model="documentacao.cenario" rows="4" placeholder="Descreva a situacao de negocio que sera validada"></textarea></label>
+                    <label class="campo-amplo">Objetivo do teste<textarea x-model="documentacao.objetivo" rows="3" placeholder="Defina a finalidade da validacao e a decisao de qualidade que este plano deve apoiar"></textarea></label>
+                    <label class="campo-amplo">Escopo dos testes<textarea x-model="documentacao.escopo" rows="3" placeholder="Liste fluxos, requisitos, funcionalidades ou riscos cobertos"></textarea></label>
+                    <label>Cenario<textarea x-model="documentacao.cenario" rows="4" placeholder="Descreva a situacao de negocio que sera validada"></textarea></label>
+                    <label>Itens fora de escopo<textarea x-model="documentacao.foraDeEscopo" rows="4"></textarea></label>
+                    <label>Criterios de entrada<textarea x-model="documentacao.criteriosEntrada" rows="4" placeholder="Build disponivel, ambiente estavel, massa preparada, requisitos aprovados"></textarea></label>
+                    <label>Criterios de saida<textarea x-model="documentacao.criteriosSaida" rows="4" placeholder="Cenarios criticos aprovados, defeitos bloqueantes tratados, evidencias anexadas"></textarea></label>
                     <label>Pre-condicao<textarea x-model="documentacao.preCondicao" rows="4"></textarea></label>
                     <label>Massa de dados<textarea x-model="documentacao.massaDados" rows="4"></textarea></label>
+                    <label>Tecnicas de teste<textarea x-model="documentacao.tecnicasTeste" rows="3" placeholder="Particao de equivalencia, valor limite, tabela de decisao, exploratorio"></textarea></label>
+                    <label>Estrategia de execucao<textarea x-model="documentacao.estrategiaExecucao" rows="3"></textarea></label>
+                    <label>Riscos do produto<textarea x-model="documentacao.riscosProduto" rows="3"></textarea></label>
+                    <label>Riscos do projeto<textarea x-model="documentacao.riscosProjeto" rows="3"></textarea></label>
+                    <label>Ferramentas<textarea x-model="documentacao.ferramentas" rows="3"></textarea></label>
+                    <label>Metricas de qualidade<textarea x-model="documentacao.metricasQualidade" rows="3"></textarea></label>
                   </div>
                 </div>
               </details>
@@ -459,6 +470,8 @@
                   <option value="html">HTML</option>
                 </select>
                 <button type="button" class="botao-secundario" @click="copiarTexto(textoDocumentacaoFinal)">Copiar</button>
+                <button type="button" class="botao-secundario" @click="baixarTemplateCsvTela('documentacao')">Template CSV</button>
+                <label class="botao-secundario botao-arquivo">Importar CSV<input type="file" accept=".csv,text/csv" @change="importarCsvTela('documentacao', $event)" /></label>
                 <button type="button" class="botao-primario" @click="exportarPdf('documentacao')">Exportar PDF</button>
                 <button type="button" class="botao-secundario" @click="exportarPng('documentacao')">Exportar PNG</button>
               </div>
@@ -527,13 +540,17 @@
                 <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Identificacao da execucao</strong><small>Caso, pessoas, versao, data e comentarios</small></span><span class="badge">Execucao</span></summary>
                 <div class="acordeon-formulario__corpo">
                   <div class="grade-formulario">
-              <label class="campo-amplo">Caso de teste<select x-model="execucao.casoTeste"><option value="">Novo caso ou selecione um salvo</option><template x-for="documento in documentacoesCriadas" :key="documento.identificador"><option :value="documento.identificador" x-text="`${documento.projeto} - ${documento.funcionalidade}`"></option></template></select></label>
+              <label class="campo-amplo">Caso de teste<select x-model="execucao.casoTeste"><option value="">Novo caso ou selecione um salvo</option><template x-for="documento in documentacoesCriadas" :key="documento.identificador"><option :value="documento.identificador" x-text="`${obterProjetoClienteDocumento(documento) || 'Projeto/Cliente'} - ${documento.funcionalidade || 'Funcionalidade'}`"></option></template></select></label>
               <label>Cliente / projeto<select x-model="execucao.clienteProjetoId" @change="selecionarClienteProjetoFormulario('execucao', execucao.clienteProjetoId)"><option value="">Sem cliente/projeto selecionado</option><template x-for="clienteProjeto in configuracoes.clientesProjetos" :key="clienteProjeto.identificador"><option :value="clienteProjeto.identificador" x-text="clienteProjeto.nome"></option></template></select></label>
               <label>Executor QA<select x-model="execucao.qaResponsavelId" @change="selecionarQaFormulario('execucao', execucao.qaResponsavelId)"><option value="">Sem QA selecionado</option><template x-for="qa in configuracoes.qas" :key="qa.identificador"><option :value="qa.identificador" x-text="qa.nome"></option></template></select></label>
               <label>Executor livre<input x-model="execucao.executor" type="text" /></label>
               <label>Desenvolvedor<select x-model="execucao.desenvolvedorId" @change="selecionarDesenvolvedorFormulario('execucao', execucao.desenvolvedorId)"><option value="">Sem dev selecionado</option><template x-for="desenvolvedor in configuracoes.desenvolvedores" :key="desenvolvedor.identificador"><option :value="desenvolvedor.identificador" x-text="desenvolvedor.nome"></option></template></select></label>
               <label>Versao testada<input x-model="execucao.versaoTestada" type="text" /></label>
               <label>Data e hora<input x-model="execucao.dataHora" type="datetime-local" /></label>
+              <label>Nome do cenario<input x-model="execucao.cenario" type="text" placeholder="Fluxo principal de login com credenciais validas" /></label>
+              <label>Criticidade<select x-model="execucao.criticidade"><option>Critica</option><option>Alta</option><option>Media</option><option>Baixa</option></select></label>
+              <label>Tecnica aplicada<input x-model="execucao.tecnicaTeste" type="text" placeholder="Exploratorio, valor limite, regressao" /></label>
+              <label>Defeitos vinculados<input x-model="execucao.defeitosVinculados" type="text" placeholder="BUG-123, Jira, Azure DevOps" /></label>
               <div class="campo-amplo lista-perfis-selecionados">
                 <template x-for="perfil in [obterCadastroSelecionado('execucao', 'clienteProjeto'), obterCadastroSelecionado('execucao', 'qa'), obterCadastroSelecionado('execucao', 'desenvolvedor')].filter(Boolean)" :key="perfil.identificador">
                   <article class="cartao-perfil-mini">
@@ -543,6 +560,15 @@
                   </article>
                 </template>
               </div>
+              <label>Pre-condicoes<textarea x-model="execucao.preCondicao" rows="3"></textarea></label>
+              <label>Massa de dados utilizada<textarea x-model="execucao.massaDados" rows="3"></textarea></label>
+              <label class="campo-amplo">Passos executados<textarea x-model="execucao.passosExecutados" rows="4"></textarea></label>
+              <label>Resultado esperado<textarea x-model="execucao.resultadoEsperado" rows="3"></textarea></label>
+              <label>Resultado obtido<textarea x-model="execucao.resultadoObtido" rows="3"></textarea></label>
+              <label>Reteste<input x-model="execucao.reteste" type="text" placeholder="Nao aplicado, aprovado, pendente" /></label>
+              <label>Regressao<input x-model="execucao.regressao" type="text" placeholder="Nao aplicada, aprovada, pendente" /></label>
+              <label>Riscos encontrados<textarea x-model="execucao.riscosEncontrados" rows="3"></textarea></label>
+              <label>Conclusao do QA<textarea x-model="execucao.conclusaoQa" rows="3"></textarea></label>
               <label class="campo-amplo">Comentarios<textarea x-model="execucao.comentarios" rows="4"></textarea></label>
               <div class="campo-amplo bloco-evidencias">
                 <label>Evidencias<textarea x-model="execucao.evidencias" rows="3" placeholder="Links, prints, arquivos ou observacoes"></textarea></label>
@@ -613,6 +639,8 @@
                   <option value="html">HTML</option>
                 </select>
                 <button type="button" class="botao-secundario" @click="copiarTexto(resumoExecucao)">Copiar</button>
+                <button type="button" class="botao-secundario" @click="baixarTemplateCsvTela('execucao')">Template CSV</button>
+                <label class="botao-secundario botao-arquivo">Importar CSV<input type="file" accept=".csv,text/csv" @change="importarCsvTela('execucao', $event)" /></label>
                 <button type="button" class="botao-primario" @click="exportarPdf('execucao')">PDF</button>
                 <button type="button" class="botao-secundario" @click="exportarPng('execucao')">PNG</button>
               </div>
@@ -627,6 +655,8 @@
               <h2>Report de Bug</h2>
               <div class="linha-acoes">
                 <button type="button" class="botao-secundario" @click="copiarTexto(textoBugReport)">Copiar</button>
+                <button type="button" class="botao-secundario" @click="baixarTemplateCsvTela('bug')">Template CSV</button>
+                <label class="botao-secundario botao-arquivo">Importar CSV<input type="file" accept=".csv,text/csv" @change="importarCsvTela('bug', $event)" /></label>
                 <button type="button" class="botao-primario" @click="exportarPdf('bug')">PDF</button>
                 <button type="button" class="botao-secundario" @click="exportarPng('bug')">PNG</button>
                 <button type="submit" class="botao-primario">Salvar bug</button>
@@ -766,6 +796,9 @@
               <label>Funcionalidade<input x-model="bug.funcionalidade" type="text" /></label>
               <label class="campo-amplo">Titulo do bug<input x-model="bug.titulo" type="text" /></label>
               <label>Versao<input x-model="bug.versao" type="text" /></label>
+              <label>Frequencia<select x-model="bug.frequencia"><option>Sempre ocorre</option><option>Ocorre frequentemente</option><option>Ocorre as vezes</option><option>Ocorreu uma vez</option><option>Nao foi possivel reproduzir novamente</option></select></label>
+              <label>Responsavel<input x-model="bug.responsavel" type="text" placeholder="Dev, squad ou responsavel pela tratativa" /></label>
+              <label>Data de abertura<input x-model="bug.dataAbertura" type="date" /></label>
               <label>Usuario utilizado<input x-model="bug.usuarioUtilizado" type="text" /></label>
               <label>Massa de dados<textarea x-model="bug.massaDados" rows="3"></textarea></label>
               <label>Pre-condicao<textarea x-model="bug.preCondicao" rows="3"></textarea></label>
@@ -797,7 +830,11 @@
                   </template>
                 </div>
               </div>
-              <label>Impacto<textarea x-model="bug.impacto" rows="3"></textarea></label>
+              <label>Impacto no usuario<textarea x-model="bug.impactoUsuario" rows="3"></textarea></label>
+              <label>Impacto no negocio<textarea x-model="bug.impactoNegocio" rows="3"></textarea></label>
+              <label>Impacto geral<textarea x-model="bug.impacto" rows="3"></textarea></label>
+              <label>Criterio de aceite da correcao<textarea x-model="bug.criterioAceiteCorrecao" rows="3"></textarea></label>
+              <label>Observacoes tecnicas<textarea x-model="bug.observacoesTecnicas" rows="3"></textarea></label>
               <label>Sugestao de correcao<textarea x-model="bug.sugestaoCorrecao" rows="3"></textarea></label>
               <div class="grupo-opcoes campo-amplo">
                 <span x-text="obterGrupoOpcoes('statusBug').nome"></span>
@@ -864,6 +901,8 @@
                   <option value="html">HTML</option>
                 </select>
                 <button type="button" class="botao-secundario" @click="copiarTexto(textoBugReport)">Copiar</button>
+                <button type="button" class="botao-secundario" @click="baixarTemplateCsvTela('bug')">Template CSV</button>
+                <label class="botao-secundario botao-arquivo">Importar CSV<input type="file" accept=".csv,text/csv" @change="importarCsvTela('bug', $event)" /></label>
                 <button type="button" class="botao-primario" @click="exportarPdf('bug')">PDF</button>
                 <button type="button" class="botao-secundario" @click="exportarPng('bug')">PNG</button>
               </div>
@@ -976,10 +1015,46 @@
                     <label>Tema<select x-model="configuracoes.tema"><option value="claro">Claro</option><option value="escuro">Escuro</option></select></label>
                     <label>Preferencia de exportacao<select x-model="configuracoes.preferenciaExportacao"><option>PDF</option><option>Markdown</option><option>Jira / Zephyr</option></select></label>
                     <label>Modelo padrao<select x-model="configuracoes.modeloPadrao"><option value="corporativo">Corporativo</option><option value="markdown">Markdown</option><option value="jira">Jira / Zephyr</option></select></label>
-                    <label class="campo-amplo">Cabecalho do PDF<textarea x-model="configuracoes.cabecalhoPdf" rows="3"></textarea></label>
                     <label class="campo-amplo">Rodape do PDF<textarea x-model="configuracoes.rodapePdf" rows="3"></textarea></label>
                     <label>Logo opcional<input x-model="configuracoes.logoOpcional" type="text" placeholder="URL do logo" /></label>
                     <label class="checkbox"><input x-model="configuracoes.atalhosAtivos" type="checkbox" /> Ativar atalhos de teclado</label>
+                  </div>
+                </div>
+              </details>
+              <details class="acordeon-formulario">
+                <summary><span class="acordeon-formulario__icone"><i data-lucide="chevron-right"></i></span><span class="acordeon-formulario__titulo"><strong>Headers de impressao</strong><small>Titulos, icones, temas e cores dos relatorios</small></span><span class="badge">PDF/PNG</span></summary>
+                <div class="acordeon-formulario__corpo">
+                  <div class="grade-cartoes">
+                    <article class="cartao-configuracao">
+                      <h3>Plano de testes</h3>
+                      <div class="grade-formulario">
+                        <label>Titulo<input x-model="configuracoes.impressaoHeaders.documentacao.titulo" type="text" /></label>
+                        <label>Icone / texto<input x-model="configuracoes.impressaoHeaders.documentacao.icone" type="text" maxlength="6" /></label>
+                        <label>Tema<select x-model="configuracoes.impressaoHeaders.documentacao.tema" @change="aplicarTemaHeaderImpressao('documentacao')"><option value="azul">Azul</option><option value="verde">Verde</option><option value="vermelho">Vermelho</option><option value="customizado">Customizado</option></select></label>
+                        <label>Cor primaria<input x-model="configuracoes.impressaoHeaders.documentacao.corPrimaria" type="color" /></label>
+                        <label>Cor secundaria<input x-model="configuracoes.impressaoHeaders.documentacao.corSecundaria" type="color" /></label>
+                      </div>
+                    </article>
+                    <article class="cartao-configuracao">
+                      <h3>Execucao de teste</h3>
+                      <div class="grade-formulario">
+                        <label>Titulo<input x-model="configuracoes.impressaoHeaders.execucao.titulo" type="text" /></label>
+                        <label>Icone / texto<input x-model="configuracoes.impressaoHeaders.execucao.icone" type="text" maxlength="6" /></label>
+                        <label>Tema<select x-model="configuracoes.impressaoHeaders.execucao.tema" @change="aplicarTemaHeaderImpressao('execucao')"><option value="verde">Verde</option><option value="azul">Azul</option><option value="vermelho">Vermelho</option><option value="customizado">Customizado</option></select></label>
+                        <label>Cor primaria<input x-model="configuracoes.impressaoHeaders.execucao.corPrimaria" type="color" /></label>
+                        <label>Cor secundaria<input x-model="configuracoes.impressaoHeaders.execucao.corSecundaria" type="color" /></label>
+                      </div>
+                    </article>
+                    <article class="cartao-configuracao">
+                      <h3>Bug report</h3>
+                      <div class="grade-formulario">
+                        <label>Titulo<input x-model="configuracoes.impressaoHeaders.bug.titulo" type="text" /></label>
+                        <label>Icone / texto<input x-model="configuracoes.impressaoHeaders.bug.icone" type="text" maxlength="6" /></label>
+                        <label>Tema<select x-model="configuracoes.impressaoHeaders.bug.tema" @change="aplicarTemaHeaderImpressao('bug')"><option value="vermelho">Vermelho</option><option value="azul">Azul</option><option value="verde">Verde</option><option value="customizado">Customizado</option></select></label>
+                        <label>Cor primaria<input x-model="configuracoes.impressaoHeaders.bug.corPrimaria" type="color" /></label>
+                        <label>Cor secundaria<input x-model="configuracoes.impressaoHeaders.bug.corSecundaria" type="color" /></label>
+                      </div>
+                    </article>
                   </div>
                 </div>
               </details>

@@ -14,11 +14,11 @@ window.configuracoesQa = (() => {
     return [
       criarGrupoOpcoes("Canal", "canal", false, ["Web", "Mobile", "API", "Desktop"]),
       criarGrupoOpcoes("Ambiente", "ambiente", false, ["Desenvolvimento", "Homologacao", "Staging", "Producao"]),
-      criarGrupoOpcoes("Prioridade", "prioridade", false, ["Baixa", "Media", "Alta", "Critica"]),
+      criarGrupoOpcoes("Prioridade", "prioridade", false, ["Urgente", "Alta", "Media", "Baixa", "Critica"]),
       criarGrupoOpcoes("Tipo de teste", "tiposTeste", true, ["Funcional", "Regressivo", "Smoke", "Exploratorio", "Integracao", "Usabilidade", "API", "Responsivo", "Seguranca"]),
-      criarGrupoOpcoes("Status de teste", "statusTeste", false, ["Nao executado", "Aprovado", "Reprovado", "Bloqueado", "Em analise"]),
-      criarGrupoOpcoes("Status de bug", "statusBug", false, ["Novo", "Em analise", "Corrigido", "Reteste", "Fechado"]),
-      criarGrupoOpcoes("Severidade", "severidade", false, ["Baixa", "Media", "Alta", "Critica"]),
+      criarGrupoOpcoes("Status de teste", "statusTeste", false, ["Passou", "Falhou", "Bloqueado", "Nao executado", "Em execucao", "Nao aplicavel"]),
+      criarGrupoOpcoes("Status de bug", "statusBug", false, ["Novo", "Em analise", "Em correcao", "Corrigido", "Em reteste", "Fechado", "Reaberto"]),
+      criarGrupoOpcoes("Severidade", "severidade", false, ["Critica", "Alta", "Media", "Baixa"]),
       criarGrupoOpcoes("Dispositivo", "dispositivo", false, ["Desktop", "Notebook", "Android", "iOS", "Tablet"]),
       criarGrupoOpcoes("Navegador", "navegador", false, ["Chrome", "Edge", "Firefox", "Safari", "Mobile Web"])
     ];
@@ -36,6 +36,11 @@ window.configuracoesQa = (() => {
     cabecalhoPdf: "QA Docs Studio",
     rodapePdf: "Documento gerado localmente para apoio a testes de software.",
     logoOpcional: "",
+    impressaoHeaders: {
+      documentacao: { titulo: "Plano de testes", icone: "QA", corPrimaria: "#172033", corSecundaria: "#2563eb", tema: "azul" },
+      execucao: { titulo: "Execucao de teste", icone: "OK", corPrimaria: "#10302c", corSecundaria: "#0f766e", tema: "verde" },
+      bug: { titulo: "Bug report", icone: "BUG", corPrimaria: "#3f1822", corSecundaria: "#dc2626", tema: "vermelho" }
+    },
     atalhosAtivos: true,
     qas: [],
     desenvolvedores: [],
@@ -59,15 +64,28 @@ window.configuracoesQa = (() => {
       }
     });
 
-    configuracoesNormalizadas.gruposOpcoes = gruposExistentes.map((grupo) => ({
-      ...grupo,
-      identificador: grupo.identificador || grupo.campo || crypto.randomUUID(),
-      obrigatorio: grupo.obrigatorio !== false,
-      selecaoMultipla: Boolean(grupo.selecaoMultipla),
-      opcoes: Array.isArray(grupo.opcoes) && grupo.opcoes.length > 0
+    configuracoesNormalizadas.gruposOpcoes = gruposExistentes.map((grupo) => {
+      const grupoPadrao = configuracoesBase.gruposOpcoes.find((padrao) => padrao.campo === grupo.campo);
+      const opcoesNormalizadas = Array.isArray(grupo.opcoes) && grupo.opcoes.length > 0
         ? grupo.opcoes.map((opcao) => typeof opcao === "string" ? { identificador: crypto.randomUUID(), rotulo: opcao, icone: "", imagem: "" } : { identificador: opcao.identificador || crypto.randomUUID(), rotulo: opcao.rotulo || "", icone: opcao.icone || "", imagem: opcao.imagem || "" })
-        : [{ identificador: crypto.randomUUID(), rotulo: "Padrao", icone: "", imagem: "" }]
-    }));
+        : [{ identificador: crypto.randomUUID(), rotulo: "Padrao", icone: "", imagem: "" }];
+
+      if (grupoPadrao) {
+        grupoPadrao.opcoes.forEach((opcaoPadrao) => {
+          if (!opcoesNormalizadas.some((opcao) => opcao.rotulo === opcaoPadrao.rotulo)) {
+            opcoesNormalizadas.push(opcaoPadrao);
+          }
+        });
+      }
+
+      return {
+        ...grupo,
+        identificador: grupo.identificador || grupo.campo || crypto.randomUUID(),
+        obrigatorio: grupo.obrigatorio !== false,
+        selecaoMultipla: Boolean(grupo.selecaoMultipla),
+        opcoes: opcoesNormalizadas
+      };
+    });
 
     configuracoesNormalizadas.camposPersonalizados = Array.isArray(configuracoesNormalizadas.camposPersonalizados)
       ? configuracoesNormalizadas.camposPersonalizados.map((campo) => ({
@@ -80,6 +98,18 @@ window.configuracoesQa = (() => {
         obrigatorio: Boolean(campo.obrigatorio)
       }))
       : [];
+
+    configuracoesNormalizadas.impressaoHeaders = {
+      ...configuracoesBase.impressaoHeaders,
+      ...(configuracoesNormalizadas.impressaoHeaders || {})
+    };
+
+    Object.entries(configuracoesBase.impressaoHeaders).forEach(([tipoHeader, headerPadrao]) => {
+      configuracoesNormalizadas.impressaoHeaders[tipoHeader] = {
+        ...headerPadrao,
+        ...(configuracoesNormalizadas.impressaoHeaders[tipoHeader] || {})
+      };
+    });
 
     const normalizarCadastroPerfil = (cadastro, ocupacaoPadrao) => ({
       identificador: cadastro.identificador || crypto.randomUUID(),

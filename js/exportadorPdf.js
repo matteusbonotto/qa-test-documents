@@ -23,15 +23,15 @@ window.exportadorPdf = (() => {
   function obterClasseStatus(status) {
     const valorStatus = formatarValor(status).toLowerCase();
 
-    if (valorStatus.includes("aprovado") || valorStatus.includes("corrigido") || valorStatus.includes("fechado")) {
+    if (valorStatus.includes("aprovado") || valorStatus.includes("pass") || valorStatus.includes("corrigido") || valorStatus.includes("fechado")) {
       return "pdf-status--sucesso";
     }
 
-    if (valorStatus.includes("reprovado") || valorStatus.includes("critica") || valorStatus.includes("crítica")) {
+    if (valorStatus.includes("reprovado") || valorStatus.includes("falhou") || valorStatus.includes("fail") || valorStatus.includes("critica") || valorStatus.includes("crítica")) {
       return "pdf-status--erro";
     }
 
-    if (valorStatus.includes("bloqueado") || valorStatus.includes("analise") || valorStatus.includes("análise")) {
+    if (valorStatus.includes("bloqueado") || valorStatus.includes("execucao") || valorStatus.includes("execução") || valorStatus.includes("analise") || valorStatus.includes("análise")) {
       return "pdf-status--alerta";
     }
 
@@ -42,11 +42,11 @@ window.exportadorPdf = (() => {
     const valorStatus = formatarValor(status).toLowerCase();
 
     if (valorStatus.includes("aprovado") || valorStatus.includes("pass")) {
-      return { classe: "sucesso", icone: "✓", rotulo: "Aprovado" };
+      return { classe: "sucesso", icone: "✓", rotulo: "Passou" };
     }
 
-    if (valorStatus.includes("reprovado") || valorStatus.includes("fail") || valorStatus.includes("falha")) {
-      return { classe: "erro", icone: "×", rotulo: "Reprovado" };
+    if (valorStatus.includes("reprovado") || valorStatus.includes("falhou") || valorStatus.includes("fail") || valorStatus.includes("falha")) {
+      return { classe: "erro", icone: "×", rotulo: "Falhou" };
     }
 
     if (valorStatus.includes("bloqueado")) {
@@ -57,11 +57,11 @@ window.exportadorPdf = (() => {
       return { classe: "pendente", icone: "◷", rotulo: "Pendente" };
     }
 
-    if (valorStatus.includes("andamento") || valorStatus.includes("analise") || valorStatus.includes("análise")) {
-      return { classe: "andamento", icone: "▶", rotulo: "Em andamento" };
+    if (valorStatus.includes("andamento") || valorStatus.includes("execucao") || valorStatus.includes("execução") || valorStatus.includes("analise") || valorStatus.includes("análise")) {
+      return { classe: "andamento", icone: "▶", rotulo: "Em execucao" };
     }
 
-    if (valorStatus.includes("cancelado") || valorStatus.includes("cancelada")) {
+    if (valorStatus.includes("cancelado") || valorStatus.includes("cancelada") || valorStatus.includes("nao aplicavel") || valorStatus.includes("não aplicável")) {
       return { classe: "cancelado", icone: "⌧", rotulo: "Cancelado" };
     }
 
@@ -120,10 +120,18 @@ window.exportadorPdf = (() => {
     return `<span class="pdf-perfil-avatar pdf-perfil-avatar--fallback">${escaparHtml(iniciais || "?")}</span>`;
   }
 
+  function montarAvatarQa(perfil) {
+    if (perfil?.imagemPerfil) {
+      return `<img src="${escaparHtml(perfil.imagemPerfil)}" alt="" class="pdf-qa-avatar" />`;
+    }
+
+    const iniciais = String(perfil?.nome || "QA").split(" ").filter(Boolean).slice(0, 2).map((parteNome) => parteNome[0]).join("").toUpperCase();
+    return `<span class="pdf-qa-avatar pdf-qa-avatar--fallback">${escaparHtml(iniciais || "QA")}</span>`;
+  }
+
   function montarPerfisRelatorio(perfisSelecionados = {}) {
     const perfis = [
       perfisSelecionados.clienteProjeto ? { titulo: "Cliente / Projeto", ...perfisSelecionados.clienteProjeto } : null,
-      perfisSelecionados.qa ? { titulo: "Criador / Executor", ...perfisSelecionados.qa } : null,
       perfisSelecionados.desenvolvedor ? { titulo: "Desenvolvedor", ...perfisSelecionados.desenvolvedor } : null
     ].filter(Boolean);
 
@@ -179,57 +187,29 @@ window.exportadorPdf = (() => {
     `;
   }
 
-  function montarTrilhaInfografico(documento, tipoDocumento) {
-    const itens = tipoDocumento === "bug"
-      ? [
-        ["01", "Contexto", documento.projeto || documento.modulo || "-"],
-        ["02", "Impacto", documento.impacto || documento.severidade || "-"],
-        ["03", "Reproducao", documento.passosReproduzir ? "Passos informados" : "Nao informado"],
-        ["04", "Situacao", documento.status || "-"]
-      ]
-      : tipoDocumento === "execucao"
-        ? [
-        ["01", "Caso", documento.casoTeste || "Novo caso"],
-        ["02", "Ambiente", documento.ambiente || "-"],
-        ["03", "Executor", documento.executor || "-"],
-        ["04", "Resultado", documento.status || "-"]
-      ]
-        : [
-        ["01", "Planejamento", documento.tipoTeste || formatarValor(documento.tiposTeste) || "-"],
-        ["02", "Execucao", documento.passos?.length ? `${documento.passos.length} passo(s)` : "Sem passos"],
-        ["03", "Evidencias", documento.evidencias ? "Registradas" : "Pendentes"],
-        ["04", "Resultado", documento.status || "-"]
-      ];
-
-    return `
-      <section class="pdf-infografico">
-        ${itens.map(([numero, titulo, descricao]) => `
-          <article>
-            <span>${numero}</span>
-            <strong>${escaparHtml(titulo)}</strong>
-            <p>${escaparHtml(descricao)}</p>
-          </article>
-        `).join("")}
-      </section>
-    `;
-  }
-
   function montarDocumentoTeste(documentacao) {
     return `
-      <section class="pdf-grid-campos">
-        ${montarLinhaCampo("Projeto", documentacao.projeto)}
-        ${montarLinhaCampo("Modulo", documentacao.modulo)}
-        ${montarLinhaCampo("Funcionalidade", documentacao.funcionalidade)}
-        ${montarLinhaCampo("Historia", documentacao.historiaUsuario)}
-        ${montarLinhaCampo("Canal", documentacao.canal)}
-        ${montarLinhaCampo("Ambiente", documentacao.ambiente)}
-        ${montarLinhaCampo("Prioridade", documentacao.prioridade)}
-        ${montarLinhaCampo("Tipo de teste", documentacao.tiposTeste || documentacao.tipoTeste)}
+      ${documentacao.historiaUsuario || documentacao.canal ? `
+        <section class="pdf-grid-campos">
+          ${montarLinhaCampo("Historia", documentacao.historiaUsuario)}
+          ${montarLinhaCampo("Canal", documentacao.canal)}
+        </section>
+      ` : ""}
+      ${montarSecaoTexto("Objetivo", documentacao.objetivo || documentacao.cenario)}
+      ${montarSecaoTexto("Escopo dos Testes", documentacao.escopo || documentacao.funcionalidade)}
+      ${montarSecaoTexto("Itens Fora de Escopo", documentacao.foraDeEscopo)}
+      <section class="pdf-grid-dupla">
+        ${montarSecaoTexto("Criterios de Entrada", documentacao.criteriosEntrada || documentacao.preCondicao)}
+        ${montarSecaoTexto("Criterios de Saida", documentacao.criteriosSaida || documentacao.resultadoEsperado)}
       </section>
-      ${montarSecaoTexto("Cenario", documentacao.cenario)}
+      ${montarSecaoTexto("Tecnicas e Estrategia", [documentacao.tecnicasTeste, documentacao.estrategiaExecucao].filter(Boolean).join("\n"))}
       <section class="pdf-grid-dupla">
         ${montarSecaoTexto("Pre-condicoes", documentacao.preCondicao)}
         ${montarSecaoTexto("Massa de Dados", documentacao.massaDados)}
+      </section>
+      <section class="pdf-grid-dupla">
+        ${montarSecaoTexto("Riscos do Produto", documentacao.riscosProduto)}
+        ${montarSecaoTexto("Riscos do Projeto", documentacao.riscosProjeto)}
       </section>
       ${montarTabelaPassos(documentacao.passos)}
       <section class="pdf-grid-dupla">
@@ -237,7 +217,12 @@ window.exportadorPdf = (() => {
         ${montarSecaoTexto("Resultado Obtido", documentacao.resultadoObtido)}
       </section>
       ${montarSecaoTexto("Evidencias", documentacao.evidencias)}
+      <section class="pdf-grid-dupla">
+        ${montarSecaoTexto("Ferramentas", documentacao.ferramentas)}
+        ${montarSecaoTexto("Metricas de Qualidade", documentacao.metricasQualidade)}
+      </section>
       ${montarSecaoTexto("Observacoes", documentacao.observacoes)}
+      ${montarSecaoTexto("Aprovacao ou Encerramento", documentacao.aprovacaoEncerramento)}
       ${documentacao.camposPersonalizados ? montarSecaoTexto("Campos Personalizados", documentacao.camposPersonalizados) : ""}
     `;
   }
@@ -245,17 +230,13 @@ window.exportadorPdf = (() => {
   function montarBugReport(bug) {
     return `
       <section class="pdf-grid-campos">
-        ${montarLinhaCampo("Projeto", bug.projeto)}
-        ${montarLinhaCampo("Modulo", bug.modulo)}
-        ${montarLinhaCampo("Funcionalidade", bug.funcionalidade)}
-        ${montarLinhaCampo("Severidade", bug.severidade)}
-        ${montarLinhaCampo("Prioridade", bug.prioridade)}
-        ${montarLinhaCampo("Ambiente", bug.ambiente)}
         ${montarLinhaCampo("Versao", bug.versao)}
-        ${montarLinhaCampo("Status", bug.status)}
         ${montarLinhaCampo("Dispositivo", bug.dispositivo)}
         ${montarLinhaCampo("Navegador", bug.navegador)}
         ${montarLinhaCampo("Usuario", bug.usuarioUtilizado)}
+        ${montarLinhaCampo("Frequencia", bug.frequencia)}
+        ${montarLinhaCampo("Responsavel", bug.responsavel)}
+        ${montarLinhaCampo("Data abertura", bug.dataAbertura)}
         ${montarLinhaCampo("Massa de dados", bug.massaDados)}
       </section>
       ${montarSecaoTexto("Pre-condicao", bug.preCondicao)}
@@ -264,8 +245,14 @@ window.exportadorPdf = (() => {
         ${montarSecaoTexto("Resultado Esperado", bug.resultadoEsperado)}
         ${montarSecaoTexto("Resultado Obtido", bug.resultadoObtido)}
       </section>
-      ${montarSecaoTexto("Impacto", bug.impacto)}
+      <section class="pdf-grid-dupla">
+        ${montarSecaoTexto("Impacto no Usuario", bug.impactoUsuario || bug.impacto)}
+        ${montarSecaoTexto("Impacto no Negocio", bug.impactoNegocio)}
+      </section>
+      ${montarSecaoTexto("Impacto Geral", bug.impacto)}
       ${montarSecaoTexto("Evidencias", bug.evidencias)}
+      ${montarSecaoTexto("Criterio de Aceite da Correcao", bug.criterioAceiteCorrecao)}
+      ${montarSecaoTexto("Observacoes Tecnicas", bug.observacoesTecnicas)}
       ${montarSecaoTexto("Sugestao de Correcao", bug.sugestaoCorrecao)}
       ${bug.camposPersonalizados ? montarSecaoTexto("Campos Personalizados", bug.camposPersonalizados) : ""}
     `;
@@ -296,30 +283,31 @@ window.exportadorPdf = (() => {
 
   function montarExecucaoTeste(execucao) {
     return `
-      <section class="pdf-execucao-painel">
-        <article>
-          <span>Status</span>
-          <strong>${escaparHtml(execucao.status || "-")}</strong>
-        </article>
-        <article>
-          <span>Executor</span>
-          <strong>${escaparHtml(execucao.executor || "-")}</strong>
-        </article>
-        <article>
-          <span>Ambiente</span>
-          <strong>${escaparHtml(execucao.ambiente || "-")}</strong>
-        </article>
-        <article>
-          <span>Versao</span>
-          <strong>${escaparHtml(execucao.versaoTestada || "-")}</strong>
-        </article>
+      <section class="pdf-grid-dupla">
+        ${montarSecaoTexto("Cenario", execucao.cenario)}
+        ${montarSecaoTexto("Criticidade e Tecnica", [execucao.criticidade, execucao.tecnicaTeste].filter(Boolean).join(" - "))}
       </section>
+      <section class="pdf-grid-dupla">
+        ${montarSecaoTexto("Pre-condicoes", execucao.preCondicao)}
+        ${montarSecaoTexto("Massa de Dados", execucao.massaDados)}
+      </section>
+      ${montarSecaoTexto("Passos Executados", execucao.passosExecutados)}
+      <section class="pdf-grid-dupla">
+        ${montarSecaoTexto("Resultado Esperado", execucao.resultadoEsperado)}
+        ${montarSecaoTexto("Resultado Obtido", execucao.resultadoObtido)}
+      </section>
+      <section class="pdf-grid-dupla">
+        ${montarSecaoTexto("Defeitos Vinculados", execucao.defeitosVinculados)}
+        ${montarSecaoTexto("Reteste e Regressao", [execucao.reteste ? `Reteste: ${execucao.reteste}` : "", execucao.regressao ? `Regressao: ${execucao.regressao}` : ""].filter(Boolean).join("\n"))}
+      </section>
+      ${montarSecaoTexto("Riscos Encontrados", execucao.riscosEncontrados)}
       <section class="pdf-grid-dupla">
         ${montarSecaoTexto("Comentarios da Execucao", execucao.comentarios)}
         ${montarSecaoTexto("Evidencias", execucao.evidencias)}
       </section>
       ${montarSecaoTexto("Caso de Teste Vinculado", execucao.casoTeste || "Novo caso")}
       ${montarSecaoTexto("Data e Hora", execucao.dataHora)}
+      ${montarSecaoTexto("Conclusao do QA", execucao.conclusaoQa)}
       ${execucao.camposPersonalizados ? montarSecaoTexto("Campos Personalizados", execucao.camposPersonalizados) : ""}
     `;
   }
@@ -327,37 +315,42 @@ window.exportadorPdf = (() => {
   function montarDocumentoPdf({ titulo, subtitulo, configuracoes, resumo, tipoDocumento, dados, evidencias, perfisSelecionados }) {
     const geradoEm = new Date().toLocaleString("pt-BR");
     const perfis = perfisSelecionados || dados.perfisSelecionados || {};
+    const contextoHeader = tipoDocumento === "bug" ? "bug" : tipoDocumento === "execucao" ? "execucao" : "documentacao";
+    const headerConfig = configuracoes.impressaoHeaders?.[contextoHeader] || {};
     const profissional = perfis.qa?.nome || configuracoes.nomeProfissional || "QA";
-    const empresaCliente = perfis.clienteProjeto?.nome || configuracoes.empresaCliente || "QA Docs Studio";
     const cargo = perfis.qa?.ocupacao || configuracoes.cargo || "QA Engineer";
     const status = dados.status;
-    const logoCliente = perfis.clienteProjeto?.imagemPerfil || configuracoes.logoOpcional;
-    const logo = logoCliente ? `<img src="${escaparHtml(logoCliente)}" alt="" class="pdf-logo" />` : `<div class="pdf-logo-fallback">QA</div>`;
     const conteudo = tipoDocumento === "bug" ? montarBugReport(dados) : tipoDocumento === "execucao" ? montarExecucaoTeste(dados) : montarDocumentoTeste(dados);
     const estadoExecucao = tipoDocumento === "execucao" ? obterEstadoExecucao(status) : null;
     const classeTipo = tipoDocumento === "bug" ? "documento-pdf--bug" : tipoDocumento === "execucao" ? `documento-pdf--execucao documento-pdf--execucao-${estadoExecucao.classe}` : "documento-pdf--plano";
-    const etiqueta = tipoDocumento === "bug" ? "Bug report" : tipoDocumento === "execucao" ? "Execucao de teste" : "Plano de testes";
+    const etiqueta = headerConfig.titulo || (tipoDocumento === "bug" ? "Bug report" : tipoDocumento === "execucao" ? "Execucao de teste" : "Plano de testes");
+    const iconeHeader = headerConfig.icone || "QA";
+    const tituloRelatorio = subtitulo || titulo;
+    const identificador = dados.identificador || "-";
+    const corPrimaria = headerConfig.corPrimaria || "#172033";
+    const corSecundaria = headerConfig.corSecundaria || "#2563eb";
 
     return `
-      <article class="documento-pdf ${classeTipo}">
-        <header class="pdf-capa">
-          <div class="pdf-capa__marca">
-            ${logo}
-            <div>
-              <span>${escaparHtml(empresaCliente)}</span>
-              <strong>QA Docs Studio</strong>
+      <article class="documento-pdf ${classeTipo}" style="--pdf-header-cor-1: ${escaparHtml(corPrimaria)}; --pdf-header-cor-2: ${escaparHtml(corSecundaria)};">
+        <header class="pdf-capa pdf-capa--compacta">
+          <div class="pdf-capa__topo">
+            <div class="pdf-capa__qa">
+              ${montarAvatarQa(perfis.qa)}
+              <div>
+                <span>QA</span>
+                <strong>${escaparHtml(profissional)}</strong>
+                <p>${escaparHtml(cargo)}</p>
+              </div>
+            </div>
+            <div class="pdf-capa__meta">
+              <div><span>Data e hora</span><strong>${geradoEm}</strong></div>
+              <div><span>ID unico</span><strong>${escaparHtml(identificador)}</strong></div>
             </div>
           </div>
           <div class="pdf-capa__conteudo">
-            <span class="pdf-etiqueta">${etiqueta}</span>
-            <h1>${escaparHtml(titulo)}</h1>
-            <p>${escaparHtml(subtitulo)}</p>
+            <span class="pdf-etiqueta"><b>${escaparHtml(iconeHeader)}</b>${escaparHtml(etiqueta)}</span>
+            <h1>${escaparHtml(tituloRelatorio)}</h1>
             ${tipoDocumento === "execucao" ? montarSinalizadorExecucao(status) : montarStatus(status)}
-          </div>
-          <div class="pdf-capa__rodape">
-            <div><span>Profissional</span><strong>${escaparHtml(profissional)}</strong></div>
-            <div><span>Cargo</span><strong>${escaparHtml(cargo)}</strong></div>
-            <div><span>Gerado em</span><strong>${geradoEm}</strong></div>
           </div>
         </header>
 
@@ -373,8 +366,6 @@ window.exportadorPdf = (() => {
           </section>
 
           ${montarPerfisRelatorio(perfis)}
-
-          ${montarTrilhaInfografico(dados, tipoDocumento)}
 
           <section class="pdf-conteudo">
             <div class="pdf-titulo-secao">
@@ -451,7 +442,6 @@ window.exportadorPdf = (() => {
     const seletoresEvitarQuebra = [
       ".pdf-resumo",
       ".pdf-perfis",
-      ".pdf-infografico",
       ".pdf-grid-campos",
       ".pdf-grid-dupla",
       ".pdf-execucao-painel",
